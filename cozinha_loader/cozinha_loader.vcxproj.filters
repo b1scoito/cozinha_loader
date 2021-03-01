@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="precompiled">
+      <UniqueIdentifier>{ebfadaa9-2c80-4c74-b27c-c01e8ed57886}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="defined">
+      <UniqueIdentifier>{ba7bf719-1929-4eed-a323-02c32e116f3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="defined\logger">
+      <UniqueIdentifier>{10d10d53-65fa-4875-965f-f7ec0fa57614}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="defined\memory">
+      <UniqueIdentifier>{8f4f41f8-3272-4c46-a64b-a5209764d0cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="defined\util">
+      <UniqueIdentifier>{5dfeec10-d957-4322-8a9a-3f33434a2c17}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="pch.cpp">
+      <Filter>precompiled</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>precompiled</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>precompiled</Filter>
+    </ClInclude>
+    <ClInclude Include="logging.hpp">
+      <Filter>defined\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="memory.hpp">
+      <Filter>defined\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="util.hpp">
+      <Filter>defined\util</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

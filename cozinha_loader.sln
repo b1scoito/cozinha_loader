@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31019.35
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cozinha_loader", "cozinha_loader/cozinha_loader.vcxproj", "{BEDD9CDF-0A43-468D-8214-816D1D69E405}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BEDD9CDF-0A43-468D-8214-816D1D69E405}.Debug|x86.ActiveCfg = Debug|Win32
+		{BEDD9CDF-0A43-468D-8214-816D1D69E405}.Debug|x86.Build.0 = Debug|Win32
+		{BEDD9CDF-0A43-468D-8214-816D1D69E405}.Release|x86.ActiveCfg = Release|Win32
+		{BEDD9CDF-0A43-468D-8214-816D1D69E405}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6FFE8D49-7AF0-43DD-8DC4-E3C3CA62AE56}
+	EndGlobalSection
+EndGlobal
