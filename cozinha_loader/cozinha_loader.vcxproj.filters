@@ -16,11 +16,17 @@
     <Filter Include="defined\util">
       <UniqueIdentifier>{5dfeec10-d957-4322-8a9a-3f33434a2c17}</UniqueIdentifier>
     </Filter>
+    <Filter Include="loader">
+      <UniqueIdentifier>{d12d3d7f-dc0d-4eaa-8eb7-8c518c5734ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <Filter>precompiled</Filter>
+    </ClCompile>
+    <ClCompile Include="injection.cpp">
+      <Filter>loader</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -38,6 +44,9 @@
     </ClInclude>
     <ClInclude Include="util.hpp">
       <Filter>defined\util</Filter>
+    </ClInclude>
+    <ClInclude Include="injection.h">
+      <Filter>loader</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

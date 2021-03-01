@@ -22,3 +22,5 @@
 #include "logging.hpp"
 #include "util.hpp"
 #include "memory.hpp"
+
+#include "injection.h"
