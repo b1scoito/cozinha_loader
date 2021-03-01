@@ -4,7 +4,7 @@ enum msg_type_t : std::uint32_t
 {
 	LNONE = 0,
 	LSUCCESS = 10,	/* green */
-	LINFO = 11,	/* cyan */
+	LINFO = 11,		/* cyan */
 	LWARN = 14,		/* yellow */
 	LERROR = 12		/* red */
 };
@@ -13,16 +13,11 @@ inline std::ostream &operator<< ( std::ostream &os, const msg_type_t type )
 {
 	switch ( type )
 	{
-		case msg_type_t::LSUCCESS:
-			return os << "success";
-		case msg_type_t::LINFO:
-			return os << "info";
-		case msg_type_t::LWARN:
-			return os << "warn";
-		case msg_type_t::LERROR:
-			return os << "error";
-		default:
-			return os << "";
+		case msg_type_t::LSUCCESS:	return os << "+";
+		case msg_type_t::LINFO:		return os << "~";
+		case msg_type_t::LWARN:		return os << ">";
+		case msg_type_t::LERROR:	return os << "!";
+		default:					return os << "";
 	};
 }
 
@@ -36,7 +31,7 @@ public:
 	{
 		AllocConsole( );
 		AttachConsole( GetCurrentProcessId( ) );
-		SetConsoleTitleA( "[cozinha_loader]: console" );
+		SetConsoleTitleA( "" );
 
 		FILE *conin, *conout;
 		freopen_s( &conin, "conin$", "r", stdin );

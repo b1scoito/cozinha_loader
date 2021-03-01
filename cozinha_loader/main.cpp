@@ -19,7 +19,7 @@ int WINAPI WinMain(
 	//
 	if ( !std::filesystem::exists( "vac3_b.dll" ) )
 	{
-		_log( LERROR, "[filesystem_exists]: vac bypass dll not found." );
+		_log( LERROR, "VAC bypass (vac3_b.dll) not found." );
 		return EXIT_FAILURE;
 	}
 
@@ -35,7 +35,7 @@ int WINAPI WinMain(
 	//
 	if ( !util::read_file_to_memory( vac_dll_path.string( ).c_str( ), &vac_buffer ) )
 	{
-		_log( LERROR, "[read_file_to_memory]: Failed to write vac dll to buffer." );
+		_log( LERROR, "Failed to write vac bypass dll to buffer." );
 		return EXIT_FAILURE;
 	}
 
@@ -43,7 +43,7 @@ int WINAPI WinMain(
 	//
 	if ( !std::filesystem::exists( "cheat.dll" ) )
 	{
-		_log( LERROR, "[filesystem_exists]: cheat dll not found." );
+		_log( LERROR, "Cheat (cheat.dll) not found." );
 		return EXIT_FAILURE;
 	}
 
@@ -59,7 +59,7 @@ int WINAPI WinMain(
 	//
 	if ( !util::read_file_to_memory( cheat_dll_path.string( ).c_str( ), &cheat_buffer ) )
 	{
-		_log( LERROR, "[read_file_to_memory]: Failed to write cheat dll to buffer." );
+		_log( LERROR, "Failed to write cheat dll to buffer." );
 		return EXIT_FAILURE;
 	}
 
@@ -68,7 +68,7 @@ int WINAPI WinMain(
 	HKEY h_key {};
 	if ( RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Valve\\Steam", 0, KEY_QUERY_VALUE, &h_key ) != ERROR_SUCCESS )
 	{
-		_log( LERROR, "[reg_open_key_ex]: Failed to find steam registry." );
+		_log( LERROR, "Failed to find steam registry." );
 		RegCloseKey( h_key );
 
 		return EXIT_FAILURE;
@@ -81,7 +81,7 @@ int WINAPI WinMain(
 	//
 	if ( RegQueryValueEx( h_key, "SteamExe", nullptr, nullptr, ( LPBYTE ) ( steam_path_reg + 1 ), &steam_path_size ) != ERROR_SUCCESS )
 	{
-		_log( LERROR, "[reg_query_value_key]: Failed to query SteamExe." );
+		_log( LERROR, "Failed to query SteamExe." );
 		RegCloseKey( h_key );
 
 		return EXIT_FAILURE;
@@ -91,17 +91,27 @@ int WINAPI WinMain(
 	//
 	RegCloseKey( h_key );
 
+	// check if steamservice.exe is opened.
+	//
+	if ( mem::is_process_open( "steamservice.exe" ) )
+	{
+		_log( LERROR, "Steam service is running, steam was not opened as admin." );
+		return EXIT_FAILURE;
+	}
+
 	// our steam path string
 	//
 	auto steam_path = std::string( steam_path_reg ) + "\"";
-	_log( LINFO, "[main]: Got steam path: %s.", steam_path.c_str( ) );
+	_log( LINFO, "Got steam path: %s.", steam_path );
 
 	// close all process related to steam and csgo for the injection to begin
 	//
-	mem::kill_process( "csgo.exe" );
-
 	while ( true )
 	{
+		// if csgo is opened we'll forcely close it
+		//
+		mem::kill_process( "csgo.exe" );
+
 		mem::kill_process( "steam.exe" );
 		mem::kill_process( "steamservice.exe" );
 		mem::kill_process( "steamwebhelper.exe" );
@@ -111,15 +121,17 @@ int WINAPI WinMain(
 			&& !mem::is_process_open( "steamwebhelper.exe" ) )
 			break;
 
-		std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
+		std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
 	}
+
+	std::this_thread::sleep_for( std::chrono::seconds( 3 ) );
 
 	// open steam with console opened
 	//
 	PROCESS_INFORMATION pi {};
 	if ( !mem::open_process( steam_path.c_str( ), { "-console" }, pi ) )
 	{
-		_log( LERROR, "[open_process]: Failed to open steam." );
+		_log( LERROR, "Failed to open steam." );
 
 		CloseHandle( pi.hProcess );
 		CloseHandle( pi.hThread );
@@ -131,16 +143,6 @@ int WINAPI WinMain(
 	//
 	CloseHandle( pi.hProcess );
 	CloseHandle( pi.hThread );
-
-	// check if steamservice.exe is opened.
-	//
-	if ( mem::is_process_open( "steamservice.exe" ) )
-	{
-		_log( LWARN, "[process_open]: Steam service is running, steam was not opened as admin." );
-		return EXIT_FAILURE;
-	}
-
-	_log( LINFO, "[blackbone]: Starting injection process." );
 
 	auto mod_callback = [ ]( blackbone::CallbackType type, void *, blackbone::Process &, const blackbone::ModuleData &modInfo )
 	{
@@ -186,8 +188,6 @@ int WINAPI WinMain(
 		CloseHandle( h_process );
 	};
 
-	_log( LINFO, "[vac_injection]: Injecting vac bypass into steam." );
-
 	// spawning blackbone process variable
 	//
 	blackbone::Process steam_process {};
@@ -200,11 +200,13 @@ int WINAPI WinMain(
 	//
 	steam_process.Suspend( );
 
+	_log( LINFO, "Injecting vac bypass into steam." );
+
 	// mapping dll buffer to the process
 	//
 	if ( !steam_process.mmap( ).MapImage( vac_buffer.size( ), vac_buffer.data( ), false, blackbone::WipeHeader, mod_callback, nullptr, nullptr ).success( ) )
 	{
-		_log( LERROR, "[vac_injection]: Failed to inject vac bypass into steam." );
+		_log( LERROR, "Failed to inject vac bypass into steam." );
 
 		steam_process.Resume( );
 		steam_process.Detach( );
@@ -219,7 +221,7 @@ int WINAPI WinMain(
 	steam_process.Resume( );
 	steam_process.Detach( );
 
-	_log( LINFO, "[vac_injection]: vac bypass injected." );
+	_log( LINFO, "VAC bypass injected." );
 
 	// csgo injection
 	//
@@ -227,8 +229,7 @@ int WINAPI WinMain(
 	// didn't think a better way of doing this
 	//
 	std::system( "start steam://rungameid/730" );
-
-	_log( LINFO, "[csgo_injection]: opening csgo." );
+	_log( LINFO, "Waiting for csgo to be opened." );
 
 	// wait for csgo to be opened
 	//
@@ -237,18 +238,14 @@ int WINAPI WinMain(
 		if ( mem::is_process_open( "csgo.exe" ) )
 			break;
 
-		std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
+		std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
 	}
-
-	_log( LINFO, "[csgo_injection]: Injecting cheat into csgo." );
-
-	_log( LINFO, "[csgo_injection]: Applying NtOpenFile bypass." );
 
 	// apply the NtOpenFile bypass
 	//
 	bypass_nt_open_file( mem::get_process_id_by_name( "csgo.exe" ) );
 
-	_log( LINFO, "[csgo_injection]: Bypass applied." );
+	_log( LINFO, "NtOpenFile bypass applied." );
 
 	blackbone::Process csgo_process {};
 
@@ -259,7 +256,7 @@ int WINAPI WinMain(
 	auto &bb_game_modules = csgo_process.modules( );
 	auto modules = bb_game_modules.GetAllModules( );
 
-	_log( LINFO, "[csgo_injection]: Waiting for serverbrowser.dll." );
+	_log( LINFO, "Waiting for serverbrowser.dll." );
 
 	if ( !modules.empty( ) )
 	{
@@ -280,18 +277,18 @@ int WINAPI WinMain(
 			if ( found )
 				break;
 
-			std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+			std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
 			modules = bb_game_modules.GetAllModules( );
 		}
 	}
 
-	_log( LINFO, "[csgo_injection]: serverbrowser.dll found." );
+	_log( LINFO, "serverbrowser.dll found." );
 
 	// manualmap to csgo
 	//
 	if ( !csgo_process.mmap( ).MapImage( cheat_buffer.size( ), cheat_buffer.data( ), false, blackbone::WipeHeader, mod_callback, nullptr, nullptr ).success( ) )
 	{
-		_log( LERROR, "[csgo_injection]: Failed to inject cheat into csgo." );
+		_log( LERROR, "Failed to inject cheat into csgo." );
 
 		steam_process.Resume( );
 		steam_process.Detach( );
@@ -301,11 +298,12 @@ int WINAPI WinMain(
 		return EXIT_FAILURE;
 	}
 
-	// resume and detach from csgo you're done mate.
+	// resume and detach from csgo, you're done mate.
+	// 
 	csgo_process.Resume( );
 	csgo_process.Detach( );
 
-	_log( LSUCCESS, "[main]: Everything ready to go." );
+	_log( LSUCCESS, "Everything ready to go. Exiting." );
 
 	return EXIT_SUCCESS;
 }
