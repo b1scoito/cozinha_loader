@@ -1,6 +1,6 @@
 #pragma once
 
-namespace memory
+namespace mem
 {
 	inline bool open_process( std::string path, std::vector<std::string> att, PROCESS_INFORMATION &proc )
 	{

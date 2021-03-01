@@ -11,7 +11,7 @@ int WINAPI WinMain(
 {
 	_log( LINFO, "Starting application." );
 
-	// sleep for 5 seconds and exit on exit. if that makes sense
+	// sleep for 5 seconds and exit before exiting. if that makes sense
 	//
 	std::atexit( [ ]( ) { std::this_thread::sleep_for( std::chrono::seconds( 5 ) ); std::exit( 0 ); } );
 
@@ -98,25 +98,29 @@ int WINAPI WinMain(
 
 	// close all process related to steam and csgo for the injection to begin
 	//
+	mem::kill_process( "csgo.exe" );
+
 	while ( true )
 	{
-		memory::kill_process( "csgo.exe" );
-		memory::kill_process( "steam.exe" );
-		memory::kill_process( "steamservice.exe" );
-		memory::kill_process( "steamwebhelper.exe" );
+		mem::kill_process( "steam.exe" );
+		mem::kill_process( "steamservice.exe" );
+		mem::kill_process( "steamwebhelper.exe" );
 
-		if ( !memory::is_process_open( "steam.exe" ) && !memory::is_process_open( "steamservice.exe" ) && !memory::is_process_open( "steamwebhelper.exe" ) )
+		if ( !mem::is_process_open( "steam.exe" )
+			&& !mem::is_process_open( "steamservice.exe" )
+			&& !mem::is_process_open( "steamwebhelper.exe" ) )
 			break;
 
-		std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+		std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
 	}
 
 	// open steam with console opened
 	//
 	PROCESS_INFORMATION pi {};
-	if ( !memory::open_process( steam_path.c_str( ), { "-console" }, pi ) )
+	if ( !mem::open_process( steam_path.c_str( ), { "-console" }, pi ) )
 	{
 		_log( LERROR, "[open_process]: Failed to open steam." );
+
 		CloseHandle( pi.hProcess );
 		CloseHandle( pi.hThread );
 
@@ -130,13 +134,13 @@ int WINAPI WinMain(
 
 	// check if steamservice.exe is opened.
 	//
-	if ( memory::is_process_open( "steamservice.exe" ) )
+	if ( mem::is_process_open( "steamservice.exe" ) )
 	{
 		_log( LWARN, "[process_open]: Steam service is running, steam was not opened as admin." );
 		return EXIT_FAILURE;
 	}
 
-	_log( LINFO, "[vac_injection]: Starting injection process." );
+	_log( LINFO, "[blackbone]: Starting injection process." );
 
 	auto mod_callback = [ ]( blackbone::CallbackType type, void *, blackbone::Process &, const blackbone::ModuleData &modInfo )
 	{
@@ -154,18 +158,35 @@ int WINAPI WinMain(
 	//
 	auto bypass_nt_open_file = [ ]( DWORD pid )
 	{
-		auto h_process = OpenProcess( PROCESS_ALL_ACCESS, false, pid ); // get the handle for our process
-		void *openfile_addr = GetProcAddress( LoadLibraryW( L"ntdll" ), "NtOpenFile" ); // get the procedure address of NtOpenFile
+		// get the handle for our process
+		//
+		auto h_process = OpenProcess( PROCESS_ALL_ACCESS, false, pid );
 
-		if ( openfile_addr ) // if procaddress found
+		// get the procedure address of NtOpenFile
+		//
+		void *nt_open_file_address = GetProcAddress( LoadLibraryW( L"ntdll" ), "NtOpenFile" );
+
+		// if procedure address found
+		//
+		if ( nt_open_file_address )
 		{
-			char bytes[ 5 ]; // 5 bytes 
-			std::memcpy( bytes, openfile_addr, 5 ); // copy 5 bytes to NtOpenFile procedure address
-			WriteProcessMemory( h_process, openfile_addr, bytes, 5, nullptr ); // write memory to process
+			char bytes[ 5 ];
+
+			// copy 5 bytes to NtOpenFile procedure address
+			//
+			std::memcpy( bytes, nt_open_file_address, 5 );
+
+			// write memory to process
+			//
+			WriteProcessMemory( h_process, nt_open_file_address, bytes, 5, nullptr );
 		}
 
-		CloseHandle( h_process ); // close handle
+		// close handle
+		//
+		CloseHandle( h_process );
 	};
+
+	_log( LINFO, "[vac_injection]: Injecting vac bypass into steam." );
 
 	// spawning blackbone process variable
 	//
@@ -173,7 +194,7 @@ int WINAPI WinMain(
 
 	// attaching blackbone to the process
 	//
-	steam_process.Attach( memory::get_process_id_by_name( "steam.exe" ), PROCESS_ALL_ACCESS );
+	steam_process.Attach( mem::get_process_id_by_name( "steam.exe" ), PROCESS_ALL_ACCESS );
 
 	// suspending process for injection
 	//
@@ -184,10 +205,11 @@ int WINAPI WinMain(
 	if ( !steam_process.mmap( ).MapImage( vac_buffer.size( ), vac_buffer.data( ), false, blackbone::WipeHeader, mod_callback, nullptr, nullptr ).success( ) )
 	{
 		_log( LERROR, "[vac_injection]: Failed to inject vac bypass into steam." );
+
 		steam_process.Resume( );
 		steam_process.Detach( );
 
-		memory::kill_process( "steam.exe" );
+		mem::kill_process( "steam.exe" );
 
 		return EXIT_FAILURE;
 	}
@@ -197,7 +219,7 @@ int WINAPI WinMain(
 	steam_process.Resume( );
 	steam_process.Detach( );
 
-	_log( LINFO, "[vac_injection]: vac bypass injected, opening csgo." );
+	_log( LINFO, "[vac_injection]: vac bypass injected." );
 
 	// csgo injection
 	//
@@ -206,14 +228,16 @@ int WINAPI WinMain(
 	//
 	std::system( "start steam://rungameid/730" );
 
+	_log( LINFO, "[csgo_injection]: opening csgo." );
+
 	// wait for csgo to be opened
 	//
 	while ( true )
 	{
-		if ( memory::is_process_open( "csgo.exe" ) )
+		if ( mem::is_process_open( "csgo.exe" ) )
 			break;
 
-		std::this_thread::sleep_for( std::chrono::milliseconds( 2000 ) );
+		std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
 	}
 
 	_log( LINFO, "[csgo_injection]: Injecting cheat into csgo." );
@@ -222,7 +246,7 @@ int WINAPI WinMain(
 
 	// apply the NtOpenFile bypass
 	//
-	bypass_nt_open_file( memory::get_process_id_by_name( "csgo.exe" ) );
+	bypass_nt_open_file( mem::get_process_id_by_name( "csgo.exe" ) );
 
 	_log( LINFO, "[csgo_injection]: Bypass applied." );
 
@@ -230,7 +254,7 @@ int WINAPI WinMain(
 
 	// attach to csgo
 	//
-	csgo_process.Attach( memory::get_process_id_by_name( "csgo.exe" ), PROCESS_ALL_ACCESS );
+	csgo_process.Attach( mem::get_process_id_by_name( "csgo.exe" ), PROCESS_ALL_ACCESS );
 
 	auto &bb_game_modules = csgo_process.modules( );
 	auto modules = bb_game_modules.GetAllModules( );
@@ -272,7 +296,7 @@ int WINAPI WinMain(
 		steam_process.Resume( );
 		steam_process.Detach( );
 
-		memory::kill_process( "csgo.exe" );
+		mem::kill_process( "csgo.exe" );
 
 		return EXIT_FAILURE;
 	}
