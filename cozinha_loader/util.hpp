@@ -1,17 +1,17 @@
 #pragma once
 
-namespace util
+namespace u
 {
-	inline std::string to_lower( std::string str )
+	inline std::string to_lower( std::string string )
 	{
-		std::transform( str.begin( ), str.end( ), str.begin( ), static_cast< int( * )( int ) >( ::tolower ) );
-		return str;
+		std::transform( string.begin( ), string.end( ), string.begin( ), static_cast< int( * )( int ) >( ::tolower ) );
+		return string;
 	}
 
-	inline std::string to_upper( std::string str )
+	inline std::string to_upper( std::string string )
 	{
-		std::transform( str.begin( ), str.end( ), str.begin( ), static_cast< int( * )( int ) >( ::toupper ) );
-		return str;
+		std::transform( string.begin( ), string.end( ), string.begin( ), static_cast< int( * )( int ) >( ::toupper ) );
+		return string;
 	}
 
 	inline bool read_file_to_memory( const std::string &file_path, std::vector<std::uint8_t> *out_buffer )

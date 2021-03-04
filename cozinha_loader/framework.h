@@ -3,7 +3,7 @@
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #define NOMINMAX // Use std::min and std::max instead of min() and max()
 
-// Windows Header Files
+// Windows includes
 #include <windows.h>
 #include <iostream>
 #include <cstdint>

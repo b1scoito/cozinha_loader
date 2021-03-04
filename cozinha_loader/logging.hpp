@@ -13,11 +13,16 @@ inline std::ostream &operator<< ( std::ostream &os, const msg_type_t type )
 {
 	switch ( type )
 	{
-		case msg_type_t::LSUCCESS:	return os << "+";
-		case msg_type_t::LINFO:		return os << "~";
-		case msg_type_t::LWARN:		return os << ">";
-		case msg_type_t::LERROR:	return os << "!";
-		default:					return os << "";
+		case msg_type_t::LSUCCESS:
+			return os << "+";
+		case msg_type_t::LINFO:
+			return os << "~";
+		case msg_type_t::LWARN:
+			return os << ">";
+		case msg_type_t::LERROR:
+			return os << "!";
+		default:
+			return os << "";
 	};
 }
 
