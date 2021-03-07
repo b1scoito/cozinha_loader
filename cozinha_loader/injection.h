@@ -10,11 +10,7 @@ public:
 	void close_processes( std::vector<std::string> processes );
 
 private:
-	std::vector<std::uint8_t> vac_buffer {};
-	std::vector<std::uint8_t> cheat_buffer {};
-
-	bool inject( std::string process, bool csgo, std::vector<std::uint8_t> buffer );
-	void wait_for_process( std::string process );
+	bool inject( std::string process, std::wstring module_name, std::filesystem::path path_to_dll );
 };
 
 inline auto g_injection = std::make_unique<injection>( );
