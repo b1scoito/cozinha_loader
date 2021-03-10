@@ -1,20 +1,28 @@
-#include "pch.h"
-#include "injection.h"
+#include "pch.hpp"
+#include "injection.hpp"
 
-bool injection::inject( std::string process, std::wstring module_name, std::filesystem::path path_to_dll )
+bool injector::inject( std::string process, std::wstring module_name, std::filesystem::path path_to_dll )
 {
 	std::vector<std::uint8_t> buffer;
 
 	// Reading file and writing it to a variable
 	if ( !u::read_file_to_memory( path_to_dll.string( ), &buffer ) )
 	{
-		_log( LERROR, "Failed to write vac bypass dll to buffer." );
+		_log( LERROR, "Failed to write %ls to buffer.", path_to_dll.filename( ).c_str( ) );
 		return EXIT_FAILURE;
 	}
 
+	auto proc_list = mem::get_process_list( );
+
 	// Wait for process to be opened
-	while ( !mem::is_process_open( process.c_str( ) ) )
-		std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+	while ( true )
+	{
+		proc_list = mem::get_process_list( );
+		if ( mem::is_process_open( proc_list, process.c_str( ) ) )
+			break;
+
+		std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+	}
 
 	// Resolve PE imports
 	const auto mod_callback = [ ]( blackbone::CallbackType type, void *, blackbone::Process &, const blackbone::ModuleData &modInfo )
@@ -37,14 +45,13 @@ bool injection::inject( std::string process, std::wstring module_name, std::file
 			// Get the handle for our process
 			const auto h_process = OpenProcess( PROCESS_ALL_ACCESS, false, pid );
 
-			LPVOID nt_open_file_address {};
-
 			// Get the procedure address of NtOpenFile.
-			if ( nt_open_file_address )
-				nt_open_file_address = GetProcAddress( LoadLibraryW( L"ntdll" ), "NtOpenFile" );
+			LPVOID nt_open_file_address {};
 
 			if ( nt_open_file_address )
 			{
+				nt_open_file_address = GetProcAddress( LoadLibrary( "ntdll" ), "NtOpenFile" );
+
 				char bytes[ 5 ];
 				// Copy 5 bytes to NtOpenFile procedure address
 				std::memcpy( bytes, nt_open_file_address, 5 );
@@ -56,7 +63,7 @@ bool injection::inject( std::string process, std::wstring module_name, std::file
 			CloseHandle( h_process );
 		};
 
-		bypass_nt_open_file( mem::get_process_id_by_name( process.c_str( ) ) );
+		bypass_nt_open_file( mem::get_process_id_by_name( proc_list, process.c_str( ) ) );
 		_log( LINFO, "NtOpenFile bypass applied." );
 	}
 
@@ -64,9 +71,9 @@ bool injection::inject( std::string process, std::wstring module_name, std::file
 	blackbone::Process bb_process {};
 
 	// Attaching blackbone to the process
-	bb_process.Attach( mem::get_process_id_by_name( process.c_str( ) ), PROCESS_ALL_ACCESS );
+	bb_process.Attach( mem::get_process_id_by_name( proc_list, process.c_str( ) ), PROCESS_ALL_ACCESS );
 
-	_log( LINFO, "Injection is waiting for module %s in %s.", u::wstring_to_string( module_name ).c_str( ), process.c_str( ) );
+	_log( LINFO, "Injection with %ls is waiting for module %ls in %s.", path_to_dll.filename( ).c_str( ), module_name.c_str( ), process.c_str( ) );
 
 	// Wait for a process module so we can continue with injection.
 	auto mod_ready = false;
@@ -88,14 +95,14 @@ bool injection::inject( std::string process, std::wstring module_name, std::file
 	}
 
 	// Mapping dll buffer to the process
-	if ( !( bb_process.mmap( ).MapImage( buffer.size( ), buffer.data( ), false, blackbone::WipeHeader, mod_callback, nullptr, nullptr ).success( ) ) )
+	if ( !bb_process.mmap( ).MapImage( buffer.size( ), buffer.data( ), false, blackbone::WipeHeader, mod_callback, nullptr, nullptr ).success( ) )
 	{
 		_log( LERROR, "Failed to inject into %s.", process.c_str( ) );
 		bb_process.Detach( );
 		return EXIT_FAILURE;
 	}
 
-	_log( LSUCCESS, "Injected to %s.", process.c_str( ) );
+	_log( LSUCCESS, "Injected into %s successfully.", process.c_str( ) );
 
 	// Detach blackbone from the target process.
 	bb_process.Detach( );
@@ -103,7 +110,7 @@ bool injection::inject( std::string process, std::wstring module_name, std::file
 	return EXIT_SUCCESS;
 }
 
-bool injection::setup( )
+bool injector::run( )
 {
 	if ( !std::filesystem::exists( "vac3_b.dll" ) )
 	{
@@ -121,7 +128,12 @@ bool injection::setup( )
 
 	const auto cheat_dll_path = std::filesystem::absolute( "cheat.dll" );
 
+	close_processes( { "csgo", "steam", "gameoverlay" } );
+
 	const auto steam_path = u::get_steam_path( );
+	if ( steam_path.empty( ) )
+		return EXIT_FAILURE;
+
 	_log( LINFO, "Found SteamExe path: %s.", steam_path.c_str( ) );
 
 	// Open steam with console opened.
@@ -140,25 +152,34 @@ bool injection::setup( )
 	CloseHandle( pi.hThread );
 
 	// Inject vac bypass to steam
-	g_injection->inject( "steam.exe", L"tier0_s.dll", vac_dll_path );
+	inject( "steam", L"tier0_s.dll", vac_dll_path );
 
 	// Open csgo
 	std::system( "start steam://rungameid/730" );
 
 	// Inject cheat to csgo
-	g_injection->inject( "csgo.exe", L"serverbrowser.dll", cheat_dll_path );
+	inject( "csgo", L"serverbrowser.dll", cheat_dll_path );
 
-	_log( LSUCCESS, "All done." );
+	_log( LINFO, "All done! ;)" );
 	return EXIT_SUCCESS;
 }
 
-void injection::close_processes( std::vector<std::string> processes )
+void injector::close_processes( std::vector<std::string> processes )
 {
-	_log( LINFO, "Closing processes." );
+	_log( LINFO, "Closing processes" );
 
+	auto proc_list = mem::get_process_list( );
 	for ( const auto &process : processes )
 	{
-		while ( mem::is_process_open( process ) )
-			mem::kill_process( process );
+		while ( true )
+		{
+			mem::kill_process( proc_list, process.c_str( ) );
+
+			proc_list = mem::get_process_list( );
+			if ( !mem::is_process_open( proc_list, process.c_str( ) ) )
+				break;
+
+			std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+		}
 	}
 }

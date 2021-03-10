@@ -19,8 +19,8 @@
 #include <BlackBone/Process/Process.h>
 
 // Header files
-#include "logging.hpp"
+#include "logger.hpp"
 #include "util.hpp"
 #include "memory.hpp"
 
-#include "injection.h"
+#include "injection.hpp"

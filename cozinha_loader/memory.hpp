@@ -2,7 +2,7 @@
 
 namespace mem
 {
-	inline bool open_process( std::string path, std::vector<std::string> arguments, PROCESS_INFORMATION &process )
+	inline bool open_process( std::string path, std::vector<std::string> arguments, PROCESS_INFORMATION &pi )
 	{
 		STARTUPINFO si;
 		{
@@ -10,45 +10,42 @@ namespace mem
 			si.cb = sizeof( si );
 		}
 
-		std::string wstr {};
-		wstr += path;
+		std::string str_path {};
+		str_path += path;
 
-		for ( const auto &i : arguments )
-			wstr += " " + i;
+		for ( const auto &arg : arguments )
+			str_path += ( " " + arg );
 
-		return CreateProcess( nullptr, const_cast< char * >( wstr.c_str( ) ), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &process );
+		return CreateProcess( nullptr, const_cast< char * >( str_path.c_str( ) ), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi );
 	}
 
-	inline bool is_process_open( const std::string &process )
+	inline bool is_process_open( const std::vector<std::pair<std::uint32_t, std::string>> &vec_processes, std::string_view str_proc )
 	{
-		if ( process.empty( ) )
+		if ( vec_processes.empty( ) )
 			return false;
 
-		auto file = process;
-
-		if ( file.find_last_of( "." ) != std::string::npos )
-			file.erase( file.find_last_of( "." ), std::string::npos );
-
-		file += ".exe";
-
-		const auto handle = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, NULL );
-
-		PROCESSENTRY32 entry {}; entry.dwSize = sizeof( entry );
-
-		if ( !Process32First( handle, &entry ) )
+		if ( str_proc.empty( ) )
 			return false;
 
-		while ( Process32Next( handle, &entry ) )
+		auto target = u::to_lower( str_proc.data( ) );
+		for ( const auto &ctx : vec_processes )
 		{
-			if ( u::to_lower( entry.szExeFile ).compare( u::to_lower( file ) ) == 0 )
+			auto ep = u::to_lower( ctx.second );
+			if ( target.find( ".exe" ) == std::string::npos )
 			{
-				const auto process = OpenProcess( PROCESS_VM_READ, false, entry.th32ProcessID );
+				if ( ep.find( target ) == std::string::npos )
+					continue;
+			}
+			else
+			{
+				if ( ep != target )
+					continue;
+			}
 
-				if ( process != nullptr )
-					CloseHandle( process );
-
-				CloseHandle( handle );
-
+			const auto h_process = OpenProcess( PROCESS_VM_READ, false, ctx.first );
+			if ( h_process != nullptr )
+			{
+				CloseHandle( h_process );
 				return true;
 			}
 		}
@@ -56,74 +53,88 @@ namespace mem
 		return false;
 	}
 
-	inline bool kill_process( const std::string &process )
+	inline bool kill_process( const std::vector<std::pair<std::uint32_t, std::string>> &vec_processes, std::string_view str_proc )
 	{
-		if ( process.empty( ) )
+		if ( vec_processes.empty( ) )
 			return false;
 
-		auto file = process;
-
-		if ( file.find_last_of( "." ) != std::string::npos )
-			file.erase( file.find_last_of( "." ), std::string::npos );
-
-		file += ".exe";
-
-		const auto handle = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, NULL );
-
-		PROCESSENTRY32 entry {}; entry.dwSize = sizeof( entry );
-
-		if ( !Process32First( handle, &entry ) )
+		if ( str_proc.empty( ) )
 			return false;
 
-		while ( Process32Next( handle, &entry ) )
+		auto executed = false;
+		auto target = u::to_lower( str_proc.data( ) );
+		for ( const auto &ctx : vec_processes )
 		{
-			if ( u::to_lower( entry.szExeFile ).compare( u::to_lower( file ) ) == 0 )
+			auto ep = u::to_lower( ctx.second );
+			if ( target.find( ".exe" ) == std::string::npos )
 			{
-				const auto process = OpenProcess( PROCESS_TERMINATE, false, entry.th32ProcessID );
-
-				if ( process != nullptr )
-				{
-					TerminateProcess( process, 9 );
-					CloseHandle( process );
-				}
-
-				CloseHandle( handle );
-
-				return true;
+				if ( ep.find( target ) == std::string::npos )
+					continue;
 			}
+			else
+			{
+				if ( ep != target )
+					continue;
+			}
+
+			const auto h_process = OpenProcess( PROCESS_TERMINATE, false, ctx.first );
+			if ( h_process != nullptr )
+			{
+				TerminateProcess( h_process, 9 );
+				CloseHandle( h_process );
+
+				executed = true;
+			}
+		}
+
+		return executed;
+	}
+
+	inline std::uint32_t get_process_id_by_name( const std::vector<std::pair<std::uint32_t, std::string>> &vec_processes, std::string_view str_proc )
+	{
+		if ( vec_processes.empty( ) )
+			return false;
+
+		if ( str_proc.empty( ) )
+			return false;
+
+		auto target = u::to_lower( str_proc.data( ) );
+		for ( const auto &ctx : vec_processes )
+		{
+			auto ep = u::to_lower( ctx.second );
+			if ( target.find( ".exe" ) == std::string::npos )
+			{
+				if ( ep.find( target ) == std::string::npos )
+					continue;
+			}
+			else
+			{
+				if ( ep != target )
+					continue;
+			}
+
+			return ctx.first;
 		}
 
 		return false;
 	}
 
-	inline int get_process_id_by_name( const std::string &process )
+	inline std::vector<std::pair<std::uint32_t, std::string>> get_process_list( )
 	{
-		if ( process.empty( ) )
-			return false;
+		std::vector<std::pair<std::uint32_t, std::string>> vec_list {};
 
-		auto file = process;
+		const auto h_handle = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, NULL );
+		PROCESSENTRY32 m_entry {}; m_entry.dwSize = sizeof( m_entry );
 
-		if ( file.find_last_of( "." ) != std::string::npos )
-			file.erase( file.find_last_of( "." ), std::string::npos );
+		if ( !Process32First( h_handle, &m_entry ) )
+			return {};
 
-		file += ".exe";
-
-		const auto handle = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, NULL );
-
-		PROCESSENTRY32 entry {}; entry.dwSize = sizeof( entry );
-
-		if ( !Process32First( handle, &entry ) )
-			return 0;
-
-		while ( Process32Next( handle, &entry ) )
+		while ( Process32Next( h_handle, &m_entry ) )
 		{
-			if ( u::to_lower( entry.szExeFile ).compare( u::to_lower( file ) ) == 0 )
-			{
-				CloseHandle( handle );
-				return entry.th32ProcessID;
-			}
+			vec_list.emplace_back( m_entry.th32ProcessID, m_entry.szExeFile );
 		}
 
-		return 0;
+		CloseHandle( h_handle );
+		return vec_list;
 	}
 }

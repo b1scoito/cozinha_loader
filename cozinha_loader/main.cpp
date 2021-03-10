@@ -1,4 +1,4 @@
-#include "pch.h"
+#include "pch.hpp"
 
 // WinMain definition as-is.
 int WINAPI WinMain(
@@ -15,9 +15,7 @@ int WINAPI WinMain(
 		}
 	);
 
-	g_injection->close_processes( { "csgo.exe", "SteamService.exe", "steam.exe", "steamwebhelper.exe" } );
-
-	if ( !g_injection->setup( ) )
+	if ( !g_inj->run( ) )
 		return EXIT_FAILURE;
 
 	return EXIT_SUCCESS;

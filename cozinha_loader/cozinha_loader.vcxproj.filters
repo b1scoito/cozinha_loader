@@ -7,9 +7,6 @@
     <Filter Include="defined">
       <UniqueIdentifier>{ba7bf719-1929-4eed-a323-02c32e116f3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="defined\logger">
-      <UniqueIdentifier>{10d10d53-65fa-4875-965f-f7ec0fa57614}</UniqueIdentifier>
-    </Filter>
     <Filter Include="defined\memory">
       <UniqueIdentifier>{8f4f41f8-3272-4c46-a64b-a5209764d0cf}</UniqueIdentifier>
     </Filter>
@@ -18,6 +15,9 @@
     </Filter>
     <Filter Include="loader">
       <UniqueIdentifier>{d12d3d7f-dc0d-4eaa-8eb7-8c518c5734ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="defined\logging">
+      <UniqueIdentifier>{10d10d53-65fa-4875-965f-f7ec0fa57614}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -30,14 +30,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
+    <ClInclude Include="pch.hpp">
       <Filter>precompiled</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
-      <Filter>precompiled</Filter>
-    </ClInclude>
-    <ClInclude Include="logging.hpp">
-      <Filter>defined\logger</Filter>
+    <ClInclude Include="logger.hpp">
+      <Filter>defined\logging</Filter>
     </ClInclude>
     <ClInclude Include="memory.hpp">
       <Filter>defined\memory</Filter>
@@ -45,7 +42,7 @@
     <ClInclude Include="util.hpp">
       <Filter>defined\util</Filter>
     </ClInclude>
-    <ClInclude Include="injection.h">
+    <ClInclude Include="injection.hpp">
       <Filter>loader</Filter>
     </ClInclude>
   </ItemGroup>
