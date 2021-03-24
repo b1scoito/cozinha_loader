@@ -115,6 +115,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="data.hpp" />
     <ClInclude Include="injection.hpp" />
     <ClInclude Include="logger.hpp" />
     <ClInclude Include="memory.hpp" />

@@ -27,10 +27,10 @@ namespace memory
 		if (str_proc.empty())
 			return false;
 
-		auto target = utils::to_lower( str_proc.data() );
+		auto target = utils::string::to_lower( str_proc.data() );
 		for (const auto &ctx : vec_processes)
 		{
-			auto ep = utils::to_lower( ctx.second );
+			auto ep = utils::string::to_lower( ctx.second );
 			if (target.find( ".exe" ) == std::string::npos)
 			{
 				if (ep.find( target ) == std::string::npos)
@@ -62,10 +62,10 @@ namespace memory
 			return false;
 
 		auto executed = false;
-		auto target = utils::to_lower( str_proc.data() );
+		auto target = utils::string::to_lower( str_proc.data() );
 		for (const auto &ctx : vec_processes)
 		{
-			auto ep = utils::to_lower( ctx.second );
+			auto ep = utils::string::to_lower( ctx.second );
 			if (target.find( ".exe" ) == std::string::npos)
 			{
 				if (ep.find( target ) == std::string::npos)
@@ -98,10 +98,10 @@ namespace memory
 		if (str_proc.empty())
 			return false;
 
-		auto target = utils::to_lower( str_proc.data() );
+		auto target = utils::string::to_lower( str_proc.data() );
 		for (const auto &ctx : vec_processes)
 		{
-			auto ep = utils::to_lower( ctx.second );
+			auto ep = utils::string::to_lower( ctx.second );
 			if (target.find( ".exe" ) == std::string::npos)
 			{
 				if (ep.find( target ) == std::string::npos)

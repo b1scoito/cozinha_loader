@@ -21,4 +21,5 @@
 #include "logger.hpp"
 #include "util.hpp"
 #include "memory.hpp"
+#include "data.hpp"
 #include "injection.hpp"

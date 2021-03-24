@@ -1,27 +1,17 @@
 #include "pch.hpp"
 #include "injection.hpp"
 
-bool injector::map( std::string process, std::wstring module_name, std::filesystem::path path_to_dll )
+bool injector::map( std::string process, std::wstring module_name, std::vector<std::uint8_t> binary_bytes )
 {
-	std::vector<std::uint8_t> buffer {};
-
-	// Reading file and writing it to a variable
-	if (!utils::read_file_to_memory( path_to_dll.string(), &buffer ))
-	{
-		_loge( "Failed to write %ls to buffer.", path_to_dll.filename().c_str() );
-		return EXIT_FAILURE;
-	}
-
 	// Wait for process to be opened
-	auto proc_list = memory::get_process_list();
+	auto process_list = memory::get_process_list();
 	while (true)
 	{
-		proc_list = memory::get_process_list();
-		if (memory::is_process_open( proc_list, process ))
-			break;
-
-		// this is a magic number, and for some reason, if it's not 1 second, won't load csgo.
 		std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+
+		process_list = memory::get_process_list();
+		if (memory::is_process_open( process_list, process ))
+			break;
 	}
 
 	if (process.find( "csgo" ) != std::string::npos)
@@ -48,22 +38,22 @@ bool injector::map( std::string process, std::wstring module_name, std::filesyst
 			CloseHandle( h_process );
 		};
 
-		bypass_nt_open_file( memory::get_process_id_by_name( proc_list, process ) );
-		_logi( "NtOpenFile bypass applied." );
+		bypass_nt_open_file( memory::get_process_id_by_name( process_list, process ) );
 	}
 
 	// Spawning blackbone process variable
 	blackbone::Process bb_process {};
 
 	// Attaching blackbone to the process
-	bb_process.Attach( memory::get_process_id_by_name( proc_list, process ), PROCESS_ALL_ACCESS );
-
-	_logi( "Injection with %ls is waiting for module %ls in %s.", path_to_dll.filename().c_str(), module_name.c_str(), process.c_str() );
+	bb_process.Attach( memory::get_process_id_by_name( process_list, process ), PROCESS_ALL_ACCESS );
+	_logd( "Injecting into %s, waiting for %ls.", process.c_str(), module_name.c_str() );
 
 	// Wait for a process module so we can continue with injection.
-	auto mod_ready = false;
+	bool mod_ready = false;
 	while (!mod_ready)
 	{
+		std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+
 		for (const auto &mod : bb_process.modules().GetAllModules())
 		{
 			if (mod.first.first == module_name)
@@ -75,8 +65,6 @@ bool injector::map( std::string process, std::wstring module_name, std::filesyst
 
 		if (mod_ready)
 			break;
-
-		std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
 	}
 
 	// Resolve PE imports
@@ -92,8 +80,8 @@ bool injector::map( std::string process, std::wstring module_name, std::filesyst
 		return blackbone::LoadData( blackbone::MT_Default, blackbone::Ldr_Ignore );
 	};
 
-	// Mapping dll buffer to the process
-	if (!bb_process.mmap().MapImage( buffer.size(), buffer.data(), false, blackbone::WipeHeader, mod_callback, nullptr, nullptr ).success())
+	// Mapping dll bytes to the process
+	if (!bb_process.mmap().MapImage( binary_bytes.size(), binary_bytes.data(), false, blackbone::WipeHeader, mod_callback, nullptr, nullptr ).success())
 	{
 		_loge( "Failed to inject into %s.", process.c_str() );
 		bb_process.Detach();
@@ -101,39 +89,24 @@ bool injector::map( std::string process, std::wstring module_name, std::filesyst
 		return EXIT_FAILURE;
 	}
 
-	_logs( "Injected into %s successfully.", process.c_str() );
-
 	// Detach blackbone from the target process.
 	bb_process.Detach();
 
+	_logs( "Injected into %s successfully.", process.c_str() );
 	return EXIT_SUCCESS;
 }
 
 bool injector::run()
 {
-	if (!std::filesystem::exists( vac3_filename ))
-	{
-		_loge( "%s not found.", vac3_filename.c_str() );
-		return EXIT_FAILURE;
-	}
-
-	const auto vac_dll_path = std::filesystem::absolute( vac3_filename );
-
 	if (!std::filesystem::exists( cheat_filename ))
 	{
 		_loge( "%s not found.", cheat_filename.c_str() );
 		return EXIT_FAILURE;
 	}
 
-	const auto cheat_dll_path = std::filesystem::absolute( cheat_filename );
+	close_processes( { "csgo", "steam" } );
 
-	close_processes( {
-			"csgo",
-			"steam",
-			"gameoverlay"
-		} );
-
-	const auto steam_path = utils::get_steam_path();
+	const auto steam_path = utils::other::get_steam_path();
 	if (steam_path.empty())
 		return EXIT_FAILURE;
 
@@ -154,30 +127,39 @@ bool injector::run()
 	CloseHandle( pi.hProcess );
 	CloseHandle( pi.hThread );
 
+	std::vector<std::uint8_t> cheat {};
+
+	// Reading file and writing it to a variable
+	if (!utils::other::read_file_to_memory( std::filesystem::absolute( cheat_filename ).string(), &cheat ))
+	{
+		_loge( "Failed to write dll to memory." );
+		return EXIT_FAILURE;
+	}
+
 	// Inject vac bypass to steam
-	map( "steam", L"tier0_s.dll", vac_dll_path );
+	map( "steam", L"tier0_s.dll", vac3_data );
 
 	// Inject cheat to csgo
-	map( "csgo", L"serverbrowser.dll", cheat_dll_path );
+	map( "csgo", L"serverbrowser.dll", cheat );
 
-	_logi( "All done!" );
+	_logs( "All done!" );
 	return EXIT_SUCCESS;
 }
 
 void injector::close_processes( std::vector<std::string> processes )
 {
-	auto proc_list = memory::get_process_list();
+	auto process_list = memory::get_process_list();
 	for (const auto &process : processes)
 	{
 		while (true)
 		{
-			memory::kill_process( proc_list, process );
-
-			proc_list = memory::get_process_list();
-			if (!memory::is_process_open( proc_list, process ))
-				break;
-
 			std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
+
+			memory::kill_process( process_list, process );
+
+			process_list = memory::get_process_list();
+			if (!memory::is_process_open( process_list, process ))
+				break;
 		}
 	}
 }

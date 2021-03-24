@@ -19,6 +19,9 @@
     <Filter Include="helpers\utils">
       <UniqueIdentifier>{5dfeec10-d957-4322-8a9a-3f33434a2c17}</UniqueIdentifier>
     </Filter>
+    <Filter Include="helpers\vac3_bypass">
+      <UniqueIdentifier>{1771c7ca-3cf1-4f5a-8fb0-c784c17f5d96}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -44,6 +47,9 @@
     </ClInclude>
     <ClInclude Include="injection.hpp">
       <Filter>loader</Filter>
+    </ClInclude>
+    <ClInclude Include="data.hpp">
+      <Filter>helpers\vac3_bypass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
