@@ -48,7 +48,7 @@
     <ClInclude Include="injection.hpp">
       <Filter>loader</Filter>
     </ClInclude>
-    <ClInclude Include="data.hpp">
+    <ClInclude Include="vac3_bypass_data.hpp">
       <Filter>helpers\vac3_bypass</Filter>
     </ClInclude>
   </ItemGroup>
