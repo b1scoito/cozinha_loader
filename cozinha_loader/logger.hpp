@@ -2,7 +2,8 @@
 
 #include <shared_mutex>
 
-enum class msg_type_t: std::uint32_t {
+enum class msg_type_t: std::uint32_t
+{
 	LNONE = 0,
 	LSUCCESS = 10,	/* green */
 	LDEBUG = 9,		/* blue */
@@ -11,8 +12,10 @@ enum class msg_type_t: std::uint32_t {
 	LINFO = 8		/* gray */
 };
 
-inline std::ostream &operator<< ( std::ostream &os, const msg_type_t type ) {
-	switch (type) {
+inline std::ostream &operator<< ( std::ostream &os, const msg_type_t type )
+{
+	switch (type)
+	{
 		case msg_type_t::LSUCCESS:
 			return os << ">>";
 		case msg_type_t::LDEBUG:
@@ -27,12 +30,14 @@ inline std::ostream &operator<< ( std::ostream &os, const msg_type_t type ) {
 	};
 }
 
-class logger {
+class logger
+{
 private:
 	std::shared_timed_mutex m {};
 
 public:
-	logger() {
+	logger()
+	{
 		FILE *conin {}, *conout {};
 
 		AllocConsole();
@@ -44,14 +49,16 @@ public:
 		freopen_s( &conout, "conout$", "w", stdout );
 		freopen_s( &conout, "conout$", "w", stderr );
 	}
-	~logger() {
+	~logger()
+	{
 		const auto handle = FindWindow( "ConsoleWindowClass", nullptr );
 		ShowWindow( handle, SW_HIDE );
 		FreeConsole();
 	}
 
 	template< typename ... arg >
-	void print( const msg_type_t type, const std::string &func, const std::string &format, arg ... a ) {
+	void print( const msg_type_t type, const std::string &func, const std::string &format, arg ... a )
+	{
 		static auto *h_console = GetStdHandle( STD_OUTPUT_HANDLE );
 		std::unique_lock<decltype(m)> lock( m );
 
@@ -62,7 +69,8 @@ public:
 		const auto formated = std::string( buf.get(), buf.get() + size - 1 );
 
 		// print msg		
-		if (type != msg_type_t::LNONE) {
+		if (type != msg_type_t::LNONE)
+		{
 			SetConsoleTextAttribute( h_console, static_cast<WORD>(type) );
 			std::cout << "[";
 			std::cout << type;

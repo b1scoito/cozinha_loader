@@ -117,12 +117,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="singleton.hpp" />
     <ClInclude Include="vac3_bypass_data.hpp" />
     <ClInclude Include="injection.hpp" />
     <ClInclude Include="logger.hpp" />
     <ClInclude Include="memory.hpp" />
     <ClInclude Include="pch.hpp" />
-    <ClInclude Include="util.hpp" />
+    <ClInclude Include="utils.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
