@@ -7,23 +7,20 @@
     <Filter Include="pch">
       <UniqueIdentifier>{ebfadaa9-2c80-4c74-b27c-c01e8ed57886}</UniqueIdentifier>
     </Filter>
-    <Filter Include="helpers">
+    <Filter Include="ext">
       <UniqueIdentifier>{ba7bf719-1929-4eed-a323-02c32e116f3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="helpers\memory">
+    <Filter Include="ext\memory">
       <UniqueIdentifier>{8f4f41f8-3272-4c46-a64b-a5209764d0cf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="helpers\logging">
+    <Filter Include="ext\logging">
       <UniqueIdentifier>{10d10d53-65fa-4875-965f-f7ec0fa57614}</UniqueIdentifier>
     </Filter>
-    <Filter Include="helpers\utils">
+    <Filter Include="ext\utils">
       <UniqueIdentifier>{5dfeec10-d957-4322-8a9a-3f33434a2c17}</UniqueIdentifier>
     </Filter>
-    <Filter Include="helpers\vac3_bypass">
+    <Filter Include="ext\vac3_bypass">
       <UniqueIdentifier>{1771c7ca-3cf1-4f5a-8fb0-c784c17f5d96}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="helpers\singleton">
-      <UniqueIdentifier>{526d0e79-9eb5-4faa-8937-dab1afdc9273}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -40,22 +37,19 @@
       <Filter>pch</Filter>
     </ClInclude>
     <ClInclude Include="logger.hpp">
-      <Filter>helpers\logging</Filter>
+      <Filter>ext\logging</Filter>
     </ClInclude>
     <ClInclude Include="memory.hpp">
-      <Filter>helpers\memory</Filter>
+      <Filter>ext\memory</Filter>
     </ClInclude>
     <ClInclude Include="utils.hpp">
-      <Filter>helpers\utils</Filter>
+      <Filter>ext\utils</Filter>
     </ClInclude>
     <ClInclude Include="injection.hpp">
       <Filter>loader</Filter>
     </ClInclude>
     <ClInclude Include="vac3_bypass_data.hpp">
-      <Filter>helpers\vac3_bypass</Filter>
-    </ClInclude>
-    <ClInclude Include="singleton.hpp">
-      <Filter>helpers\singleton</Filter>
+      <Filter>ext\vac3_bypass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

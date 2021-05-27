@@ -1,21 +1,33 @@
 #include "pch.hpp"
 
-int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd )
+auto on_exit() -> void;
+
+int WINAPI WinMain( _In_ HINSTANCE hInstance,
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPSTR lpCmdLine,
+	_In_ int nShowCmd )
 {
-	// Sleep for 5 seconds before exiting.
-	std::atexit( [] { std::this_thread::sleep_for( std::chrono::seconds( 5 ) ); } );
+	std::atexit( on_exit );
 
-	// Get arguments
-	int argc {}; LPWSTR *argv = CommandLineToArgvW( GetCommandLineW(), &argc );
+	// ~ get arguments
+	//
+	int argc; auto* argv = CommandLineToArgvW( GetCommandLineW(), &argc );
 
-	// If an argument is passed inject the target dll, so we can drag and drop the dll to the exe.
-	if (argv[1]) injector::get().cheat_filename = utils::string::wstring_to_string( argv[1] );
+	// ~ if an argument is passed inject the target dll, so we can drag and drop the dll to the exe.
+	//
+	if ( argv[1] ) utils::vars::cheat_filename = utils::string::wstring_to_string( argv[1] );
 
-	if (!injector::get().call())
-	{
-		log_err( "Injection failed!" );
+	std::string proc_name;
+	std::cout << "Target process name: ";
+	std::cin >> proc_name;
+
+	if ( !g_injector.call( proc_name ) )
 		return EXIT_FAILURE;
-	}
 
 	return EXIT_SUCCESS;
+}
+
+auto on_exit() -> void
+{
+	std::this_thread::sleep_for( 10s );
 }
