@@ -4,52 +4,58 @@
     <Filter Include="loader">
       <UniqueIdentifier>{d12d3d7f-dc0d-4eaa-8eb7-8c518c5734ea}</UniqueIdentifier>
     </Filter>
-    <Filter Include="pch">
-      <UniqueIdentifier>{ebfadaa9-2c80-4c74-b27c-c01e8ed57886}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="ext">
+    <Filter Include="utils">
       <UniqueIdentifier>{ba7bf719-1929-4eed-a323-02c32e116f3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ext\memory">
+    <Filter Include="utils\memory">
       <UniqueIdentifier>{8f4f41f8-3272-4c46-a64b-a5209764d0cf}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ext\logging">
+    <Filter Include="utils\console">
       <UniqueIdentifier>{10d10d53-65fa-4875-965f-f7ec0fa57614}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ext\utils">
+    <Filter Include="utils\utils">
       <UniqueIdentifier>{5dfeec10-d957-4322-8a9a-3f33434a2c17}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ext\vac3_bypass">
+    <Filter Include="utils\vac3_bypass">
       <UniqueIdentifier>{1771c7ca-3cf1-4f5a-8fb0-c784c17f5d96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\pch">
+      <UniqueIdentifier>{ebfadaa9-2c80-4c74-b27c-c01e8ed57886}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
-      <Filter>pch</Filter>
+      <Filter>utils\pch</Filter>
     </ClCompile>
     <ClCompile Include="injection.cpp">
       <Filter>loader</Filter>
     </ClCompile>
+    <ClCompile Include="utils.cpp">
+      <Filter>utils\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="memory.cpp">
+      <Filter>utils\memory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
-      <Filter>pch</Filter>
+      <Filter>utils\pch</Filter>
     </ClInclude>
     <ClInclude Include="logger.hpp">
-      <Filter>ext\logging</Filter>
+      <Filter>utils\console</Filter>
     </ClInclude>
     <ClInclude Include="memory.hpp">
-      <Filter>ext\memory</Filter>
+      <Filter>utils\memory</Filter>
     </ClInclude>
     <ClInclude Include="utils.hpp">
-      <Filter>ext\utils</Filter>
+      <Filter>utils\utils</Filter>
     </ClInclude>
     <ClInclude Include="injection.hpp">
       <Filter>loader</Filter>
     </ClInclude>
     <ClInclude Include="vac3_bypass_data.hpp">
-      <Filter>ext\vac3_bypass</Filter>
+      <Filter>utils\vac3_bypass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

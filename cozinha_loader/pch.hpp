@@ -5,8 +5,8 @@
 #include <fstream>
 #include <filesystem>
 
-#include <windows.h>
-#include <tlhelp32.h>
+#include <Windows.h>
+#include <TlHelp32.h>
 
 #include <BlackBone/Process/Process.h>
 
