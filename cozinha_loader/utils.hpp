@@ -2,6 +2,15 @@
 
 namespace string
 {
+	template<typename ... args>
+	std::string format( const std::string& format, args ... arg )
+	{
+		const size_t size = std::snprintf( nullptr, 0, format.c_str(), arg ... ) + 1;
+		std::unique_ptr<char[]> buf( new char[size] );
+		std::snprintf( buf.get(), size, format.c_str(), arg ... );
+		return std::string( buf.get(), buf.get() + size - 1 );
+	}
+
 	std::string to_lower( std::string str );
 	std::string to_upper( std::string str );
 

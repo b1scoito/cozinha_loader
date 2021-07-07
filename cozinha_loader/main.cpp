@@ -21,7 +21,7 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	std::cin.clear();
 
 	// ~ this function will inject vac3 bypass and the cheat dll on the target process
-	if ( !g_injector.call( proc_name, cheat_name ) )
+	if ( !g_injector->init( proc_name, cheat_name ) )
 		return EXIT_FAILURE;
 
 	return EXIT_SUCCESS;
