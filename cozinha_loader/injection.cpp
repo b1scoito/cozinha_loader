@@ -1,7 +1,7 @@
 #include "pch.hpp"
 #include "injection.hpp"
 
-bool c_injector::init( std::string proc_name, std::string cheat_name )
+bool c_injector::init( std::string proc_name, std::filesystem::path cheat_name )
 {
 	// ~ closing processes
 	close_processes( { proc_name, "steam.exe" } );
@@ -44,9 +44,8 @@ bool c_injector::init( std::string proc_name, std::string cheat_name )
 		CloseHandle( pi.hThread );
 
 	std::vector<std::uint8_t> cheat_buf {};
-
 	// ~ reading file and writing it to a variable
-	if ( !other::read_file_to_memory( std::filesystem::absolute( cheat_name ).string(), &cheat_buf ) )
+	if ( !other::read_file_to_memory( std::filesystem::absolute( cheat_name ), &cheat_buf ) )
 	{
 		log_err( "Failed to write DLL to memory!" );
 		return false;
@@ -54,24 +53,18 @@ bool c_injector::init( std::string proc_name, std::string cheat_name )
 
 	// ~ inject vac bypass to steam
 	if ( !map( "steam.exe", L"tier0_s.dll", vac3_data ) )
-	{
-		log_err( "Steam memory mapping failure!" );
 		return false;
-	}
 
 	// ~ inject cheat to process
 	if ( !map( proc_name, L"serverbrowser.dll", cheat_buf ) )
-	{
-		log_err( "Cheat memory mapping failure!" );
 		return false;
-	}
 
 	log_ok( "All done." );
 
 	return true;
 }
 
-bool c_injector::map( std::string proc, std::wstring mod_name, std::vector<std::uint8_t> buf )
+bool c_injector::map( std::string proc, std::wstring mod_name, std::vector<std::uint8_t> buf, bool wait_for_mod )
 {
 	// ~ wait for process to be opened
 	log_debug( "Waiting for - [ %s ] to be opened...", proc.c_str() );
@@ -125,22 +118,25 @@ bool c_injector::map( std::string proc, std::wstring mod_name, std::vector<std::
 	log_debug( "Waiting for - [ %ls ] in %s...", mod_name.c_str(), proc.c_str() );
 
 	// ~ wait for a process module so we can continue with injection
-	auto mod_ready = false;
-	while ( !mod_ready )
+	if ( wait_for_mod )
 	{
-		for ( const auto& mod : bb_proc.modules().GetAllModules() )
+		auto mod_ready = false;
+		while ( !mod_ready )
 		{
-			if ( mod.first.first == mod_name )
+			for ( const auto& mod : bb_proc.modules().GetAllModules() )
 			{
-				mod_ready = true;
-				break;
+				if ( mod.first.first == mod_name )
+				{
+					mod_ready = true;
+					break;
+				}
 			}
+
+			if ( mod_ready )
+				break;
+
+			std::this_thread::sleep_for( 500ms );
 		}
-
-		if ( mod_ready )
-			break;
-
-		std::this_thread::sleep_for( 500ms );
 	}
 
 	// ~ resolve PE imports
@@ -165,8 +161,14 @@ bool c_injector::map( std::string proc, std::wstring mod_name, std::vector<std::
 	{
 		log_err( "Failed to inject into [ %s ]!", proc.c_str() );
 
-		bb_proc.Terminate();
 		bb_proc.Detach();
+
+		// Try again?
+		if ( retries++ < 3 )
+		{
+			log_debug( "Retrying to inject - [ %d ]", retries );
+			map( proc, mod_name, buf, false );
+		}
 
 		return false;
 	}

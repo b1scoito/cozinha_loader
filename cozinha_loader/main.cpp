@@ -6,13 +6,19 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	int argc {}; const auto* argv = CommandLineToArgvW( GetCommandLineW(), &argc );
 
-	std::string cheat_name = argv[1] ? string::to_utf8( argv[1] ) : "cheat.dll";
+#ifndef _DEBUG
+	std::filesystem::path cheat_name = argv[1] ? string::to_utf8( argv[1] ) : "cheat.dll";
+#else
+	std::filesystem::path cheat_name = "C:\\Users\\biscuit\\Desktop\\owo\\cozinha_loader\\cozinha_loader\\out\\debug\\celestial_c.dll";
+#endif
 
 	if ( !std::filesystem::exists( cheat_name ) )
 	{
-		log_err( "Cheat dll not found! Place a dll file called cheat.dll in the same folder as the loader, or drag'n'drop the dll into the exe." );
+		log_err( "DLL not found! Place a dll file called cheat.dll in the same folder as the loader, or drag'n'drop the dll into the exe." );
 		return EXIT_FAILURE;
 	}
+
+	log_debug( "DLL path - [ %s ]", std::filesystem::absolute( cheat_name ).string().c_str() );
 
 	std::string proc_name;
 	log_prompt( "Target process name: " );

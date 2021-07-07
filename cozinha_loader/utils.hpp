@@ -20,7 +20,7 @@ namespace string
 
 namespace other
 {
-	bool read_file_to_memory( const std::string& path, std::vector<std::uint8_t>* out_buffer );
+	bool read_file_to_memory( const std::filesystem::path& path, std::vector<std::uint8_t>* out_buffer );
 
 	std::wstring get_steam_path();
 }
