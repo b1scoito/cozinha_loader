@@ -3,9 +3,9 @@
 
 namespace memory
 {
-	bool open_process( std::wstring path, std::vector<std::wstring> arguments, PROCESS_INFORMATION& pi )
+	bool open_process( std::wstring_view path, const std::vector<std::wstring> arguments, PROCESS_INFORMATION& pi )
 	{
-		STARTUPINFO si {};
+		STARTUPINFO si;
 		{
 			ZeroMemory( &si, sizeof( si ) );
 			si.cb = sizeof( si );
@@ -16,8 +16,8 @@ namespace memory
 		std::wstring str_path {};
 		str_path += path;
 
-		for ( const auto& arg : arguments )
-			str_path += ( L" " + arg );
+		for ( const auto& argument : arguments )
+			str_path += ( L" " + argument );
 
 		return CreateProcess( nullptr, str_path.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi );
 	}

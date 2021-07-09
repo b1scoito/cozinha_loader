@@ -31,7 +31,7 @@ private:
 	std::shared_timed_mutex mutex {};
 
 public:
-	logger( const std::wstring title_name = {} )
+	logger( std::wstring_view title_name = {} )
 	{
 		AllocConsole();
 		AttachConsole( GetCurrentProcessId() );
@@ -73,14 +73,14 @@ public:
 			std::cout << type;
 			std::cout << "] ";
 
+#ifdef _DEBUG
 			SetConsoleTextAttribute( h_console, 15 /* white */ );
 			std::cout << "[ ";
-
 			SetConsoleTextAttribute( h_console, static_cast<WORD>( type ) );
 			std::cout << func;
-
 			SetConsoleTextAttribute( h_console, 15 /* white */ );
 			std::cout << " ] ";
+#endif
 		}
 
 		if ( type == msg_type_t::LDEBUG )
@@ -91,11 +91,11 @@ public:
 		if ( type == msg_type_t::LPROMPT )
 			std::cout << formated;
 		else
-			std::cout << formated << "\n";
+			std::cout << formated << std::endl;
 	}
 };
 
-inline auto g_logger = logger( L"> cozinha loader" );
+inline auto g_logger = logger();
 #define log_debug(...)	g_logger.print( msg_type_t::LDEBUG, __FUNCTION__, __VA_ARGS__ )
 #define log_ok(...)		g_logger.print( msg_type_t::LSUCCESS, __FUNCTION__, __VA_ARGS__ )
 #define log_err(...)	g_logger.print( msg_type_t::LERROR, __FUNCTION__, __VA_ARGS__ )

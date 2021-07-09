@@ -47,7 +47,7 @@ namespace other
 	bool read_file_to_memory( const std::filesystem::path& path, std::vector<std::uint8_t>* out_buffer )
 	{
 		std::ifstream file( path, std::ios::binary );
-		if ( !file )
+		if ( file.fail() )
 			return false;
 
 		out_buffer->assign( ( std::istreambuf_iterator<char>( file ) ), std::istreambuf_iterator<char>() );
