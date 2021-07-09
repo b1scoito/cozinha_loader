@@ -42,7 +42,7 @@ namespace string
 	}
 }
 
-namespace other
+namespace ext
 {
 	bool read_file_to_memory( const std::filesystem::path& path, std::vector<std::uint8_t>* out_buffer )
 	{

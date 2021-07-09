@@ -18,7 +18,7 @@ namespace string
 	std::wstring to_unicode( std::string str );
 }
 
-namespace other
+namespace ext
 {
 	bool read_file_to_memory( const std::filesystem::path& path, std::vector<std::uint8_t>* out_buffer );
 

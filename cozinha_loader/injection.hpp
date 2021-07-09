@@ -3,15 +3,13 @@
 class c_injector
 {
 private:
-	bool map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, bool b_wait_for_proc = true );
+	bool map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer );
 
 	void close_processes( const std::vector<std::string_view> vec_processes );
 
 	const std::vector<std::pair<int, std::string_view>> vec_app_ids = {
 		{ 730, "csgo.exe" } // Counter-Strike: Global Offensive
 	};
-
-	std::uint8_t i_retries = 0;
 
 public:
 	c_injector() = default;

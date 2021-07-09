@@ -28,7 +28,7 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	const auto start = std::chrono::high_resolution_clock::now();
 
-	// ~ this function will inject vac3 bypass and the dll on the target process
+	// this function will inject vac3 bypass on steam and the dll on the target process
 	if ( !g_injector->init( str_proc_name, dll_path ) )
 		return EXIT_FAILURE;
 

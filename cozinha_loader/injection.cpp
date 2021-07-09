@@ -18,7 +18,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	// closing processes
 	close_processes( { str_proc_name, "steam.exe" } );
 
-	const auto steam_path = other::get_steam_path();
+	const auto steam_path = ext::get_steam_path();
 
 	if ( steam_path.empty() )
 		return failure( "Failed to retrieve steam path" );
@@ -40,11 +40,11 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	CloseHandle( pi.hThread );
 
 	std::vector<std::uint8_t> dll_buffer;
-	if ( !other::read_file_to_memory( std::filesystem::absolute( dll_path ), &dll_buffer ) )
+	if ( !ext::read_file_to_memory( std::filesystem::absolute( dll_path ), &dll_buffer ) )
 		return failure( "Failed to write DLL to memory!" );
 
 	// inject vac bypass to steam
-	if ( !map( "steam.exe", L"tier0_s.dll", std::vector<std::uint8_t>( std::begin( vac3_data ), std::end( vac3_data ) ) ) )
+	if ( !map( "steam.exe", L"tier0_s.dll", vac3_data ) )
 		return false;
 
 	// inject dll to process
@@ -54,54 +54,48 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	return true;
 }
 
-bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, bool b_wait_for_proc )
+bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer )
 {
 	auto proc_list = memory::get_process_list();
 
-	if ( b_wait_for_proc )
-	{
-		log_debug( "Waiting for process - [ %s ]", str_proc );
+	log_debug( "Waiting for process - [ %s ]", str_proc );
 
-		// update process list while process is not opened
-		do
-		{
-			proc_list = memory::get_process_list();
-			std::this_thread::sleep_for( 500ms );
-		}
-		while ( !memory::is_process_open( proc_list, str_proc ) );
+	// update process list while process is not opened
+	do
+	{
+		proc_list = memory::get_process_list();
+		std::this_thread::sleep_for( 500ms );
 	}
+	while ( !memory::is_process_open( proc_list, str_proc ) );
 
 	blackbone::Process bb_proc;
-	bb_proc.Attach( memory::get_process_id_by_name( proc_list, str_proc ) ); // PROCESS_ALL_ACCESS not needed perhaps?
+	bb_proc.Attach( memory::get_process_id_by_name( proc_list, str_proc ), PROCESS_ALL_ACCESS ); // PROCESS_ALL_ACCESS not needed perhaps? placed it back in
 
 	// wait for a process module so we can continue with injection
-	if ( b_wait_for_proc )
+	log_debug( "Waiting for - [ %ls ] in %s", wstr_mod_name.data(), str_proc );
+
+	auto mod_ready = false;
+	while ( !mod_ready )
 	{
-		log_debug( "Waiting for - [ %ls ] in %s", wstr_mod_name.data(), str_proc );
-
-		auto mod_ready = false;
-		while ( !mod_ready )
+		for ( const auto& mod : bb_proc.modules().GetAllModules() )
 		{
-			for ( const auto& mod : bb_proc.modules().GetAllModules() )
+			if ( mod.first.first == wstr_mod_name )
 			{
-				if ( mod.first.first == wstr_mod_name )
-				{
-					mod_ready = true;
-					break;
-				}
-			}
-
-			if ( mod_ready )
+				mod_ready = true;
 				break;
-
-			std::this_thread::sleep_for( 1s ); // 1s? fixes 0xC34... (i think i was calling the patch too early now)
+			}
 		}
+
+		if ( mod_ready )
+			break;
+
+		std::this_thread::sleep_for( 500ms ); // 1s? fixes 0xC34... (i think i was calling the patch too early now)
 	}
 
 	// bypassing injection block by csgo (-allow_third_party_software)
 	if ( str_proc.find( "csgo" ) != std::string::npos )
 	{
-		const auto patch_nt_open_file = [&]
+		const auto patch_nt_open_file = [&]()
 		{
 			const auto ntdll = LoadLibrary( L"ntdll" );
 
@@ -149,15 +143,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	if ( !call_result.success() )
 	{
 		log_err( "Failed to inject into - [ %s ]", str_proc );
-
 		bb_proc.Detach();
-
-		// Try again?
-		if ( i_retries++ < 2 )
-		{
-			log_debug( "Retrying to inject - [ %d ]", i_retries );
-			map( str_proc, wstr_mod_name, vec_buffer, false );
-		}
 
 		return false;
 	}
@@ -180,7 +166,7 @@ void c_injector::close_processes( const std::vector<std::string_view> vec_proces
 			memory::kill_process( proc_list, proc );
 
 			proc_list = memory::get_process_list();
-			std::this_thread::sleep_for( 500ms );
+			std::this_thread::sleep_for( 25ms );
 		}
 		while ( memory::is_process_open( proc_list, proc ) );
 	}
