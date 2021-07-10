@@ -95,7 +95,7 @@ public:
 	}
 };
 
-inline auto g_logger = logger();
+inline auto g_logger = logger( L"> cozinha loader" );
 #define log_debug(...)	g_logger.print( msg_type_t::LDEBUG, __FUNCTION__, __VA_ARGS__ )
 #define log_ok(...)		g_logger.print( msg_type_t::LSUCCESS, __FUNCTION__, __VA_ARGS__ )
 #define log_err(...)	g_logger.print( msg_type_t::LERROR, __FUNCTION__, __VA_ARGS__ )

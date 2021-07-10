@@ -7,7 +7,7 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	int argc; const auto* argv = CommandLineToArgvW( GetCommandLineW(), &argc );
 
 #ifndef _DEBUG
-	const std::filesystem::path dll_path = argv[1] ? string::to_utf8( argv[1] ) : "cheat.dll";
+	const std::filesystem::path dll_path = argv[1] ? argv[1] : L"cheat.dll";
 #else
 	const std::filesystem::path dll_path = "D:\\cheat.dll";
 #endif
@@ -35,7 +35,7 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	const auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> elapsed( end - start );
 
-	log_debug( "Done in %.3fms.", elapsed.count() );
+	log_ok( "Done.", elapsed.count() );
 
 	return EXIT_SUCCESS;
 }

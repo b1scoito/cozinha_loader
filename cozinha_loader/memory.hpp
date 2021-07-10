@@ -1,5 +1,7 @@
 #pragma once
 
+#include <TlHelp32.h>
+
 namespace memory
 {
 	bool open_process( std::wstring_view path, const std::vector<std::wstring> arguments, PROCESS_INFORMATION& pi );

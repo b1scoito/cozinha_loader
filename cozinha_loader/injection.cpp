@@ -1,7 +1,7 @@
 #include "pch.hpp"
 #include "injection.hpp"
 
-const auto failure = []( std::string_view str_err, std::pair<HANDLE, HANDLE> handles = {} ) -> bool
+const auto failure = []( std::string_view str_err, const std::pair<HANDLE, HANDLE> handles = {} ) -> bool
 {
 	if ( handles.first ) // hProcess
 		CloseHandle( handles.first );
@@ -24,13 +24,15 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 		return failure( "Failed to retrieve steam path" );
 
 	std::string launch_append {};
-	for ( const auto& it : vec_app_ids )
-	{
-		if ( it.second.find( str_proc_name ) != std::string::npos )
-			launch_append = string::format( "-applaunch %d", it.first );
-	}
 
-	log_debug( "Opening steam [ %ls ]...", steam_path.c_str() );
+	// i don't think it's a good idea to automatically open games from the list, but the code is here just in case.
+	//for ( const auto& it : vec_app_ids )
+	//{
+	//	if ( it.second.find( str_proc_name ) != std::string::npos )
+	//		launch_append = string::format( "-applaunch %d", it.first );
+	//}
+
+	log_debug( "Opening steam [ %ls ]", steam_path.c_str() );
 
 	PROCESS_INFORMATION pi;
 	if ( !memory::open_process( steam_path, { L"-console", string::to_unicode( launch_append ) }, pi ) )
@@ -39,13 +41,33 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	CloseHandle( pi.hProcess );
 	CloseHandle( pi.hThread );
 
+	log_debug( "Writing vac bypass to buffer..." );
+
+	const auto vac_buf_start = std::chrono::high_resolution_clock::now();
+
+	std::vector<std::uint8_t> vac_buffer( std::begin( vac3_data ), std::end( vac3_data ) );
+
+	const auto vac_buf_end = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double, std::milli> vac_buf_elapsed( vac_buf_end - vac_buf_start );
+	log_debug( "Done in %.f3ms.", vac_buf_elapsed );
+
+	// inject vac bypass to steam
+	if ( !map( "steam.exe", L"tier0_s.dll", vac_buffer ) )
+		return false;
+
+	log_debug( "Writing dll to buffer..." );
+
+	const auto dll_buf_start = std::chrono::high_resolution_clock::now();
+
 	std::vector<std::uint8_t> dll_buffer;
 	if ( !ext::read_file_to_memory( std::filesystem::absolute( dll_path ), &dll_buffer ) )
 		return failure( "Failed to write DLL to memory!" );
 
-	// inject vac bypass to steam
-	if ( !map( "steam.exe", L"tier0_s.dll", vac3_data ) )
-		return false;
+	const auto dll_buf_end = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double, std::milli> dll_buf_elapsed( dll_buf_end - dll_buf_start );
+	log_debug( "Done in %.f3ms.", dll_buf_elapsed );
 
 	// inject dll to process
 	if ( !map( str_proc_name, L"serverbrowser.dll", dll_buffer ) )
@@ -102,7 +124,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 			if ( !ntdll )
 				return failure( "Failed to load ntdll?" );
 
-			const void* ntopenfile_ptr = GetProcAddress( ntdll, "NtOpenFile" );
+			void* ntopenfile_ptr = GetProcAddress( ntdll, "NtOpenFile" );
 
 			if ( !ntopenfile_ptr )
 				return failure( "Failed to get NtOpenFile proc address?" );
@@ -135,7 +157,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	};
 
 	// mapping dll to the process
-	const auto call_result = bb_proc.mmap().MapImage( vec_buffer.size(), vec_buffer.data(), false, blackbone::WipeHeader | blackbone::NoThreads, mod_callback );
+	const auto call_result = bb_proc.mmap().MapImage( vec_buffer.size(), vec_buffer.data(), false, blackbone::WipeHeader, mod_callback );
 
 	// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55
 	log_debug( "Map Result - [ 0x%.8X ]", call_result.status );
@@ -150,13 +172,12 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 
 	// free memory and detach from process
 	bb_proc.Detach();
-
-	log_ok( "Injection into - [ %s ] done.", str_proc );
+	log_ok( "Injected into - [ %s ].", str_proc );
 
 	return true;
 }
 
-void c_injector::close_processes( const std::vector<std::string_view> vec_processes )
+void c_injector::close_processes( std::vector<std::string_view> vec_processes )
 {
 	auto proc_list = memory::get_process_list();
 	for ( const auto& proc : vec_processes )

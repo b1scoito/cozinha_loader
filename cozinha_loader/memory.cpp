@@ -13,13 +13,13 @@ namespace memory
 
 		ZeroMemory( &pi, sizeof( pi ) );
 
-		std::wstring str_path {};
-		str_path += path;
+		std::wstring params {};
+		params += path;
 
 		for ( const auto& argument : arguments )
-			str_path += ( L" " + argument );
+			params += ( L" " + argument );
 
-		return CreateProcess( nullptr, str_path.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi );
+		return CreateProcess( nullptr, params.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi );
 	}
 
 	bool is_process_open( const std::vector<std::pair<std::uint32_t, std::string>>& vec_processes, std::string_view str_proc )
@@ -135,7 +135,7 @@ namespace memory
 			return {};
 
 		while ( Process32Next( h_handle, &m_entry ) )
-			vec_list.emplace_back( m_entry.th32ProcessID, string::to_utf8( m_entry.szExeFile ) );
+			vec_list.emplace_back( m_entry.th32ProcessID, string::to_utf8( m_entry.szExeFile ) ); // string::to_utf8
 
 		CloseHandle( h_handle );
 

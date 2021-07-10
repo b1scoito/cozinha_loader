@@ -9,12 +9,6 @@ namespace string
 		return str;
 	}
 
-	std::string to_upper( std::string str )
-	{
-		std::transform( str.begin(), str.end(), str.begin(), static_cast<int( * )( int )>( ::toupper ) );
-		return str;
-	}
-
 	std::string to_utf8( std::wstring wstr )
 	{
 		if ( wstr.empty() )
@@ -51,6 +45,20 @@ namespace ext
 			return false;
 
 		out_buffer->assign( ( std::istreambuf_iterator<char>( file ) ), std::istreambuf_iterator<char>() );
+
+		file.close();
+
+		return true;
+	}
+
+	bool write_file_from_memory( std::string_view name, std::vector<std::uint8_t> buffer )
+	{
+		std::ofstream file( name );
+		if ( file.fail() )
+			return false;
+
+		std::ostream_iterator<std::uint8_t> iterator( file );
+		std::copy( buffer.begin(), buffer.end(), iterator );
 
 		file.close();
 
