@@ -3,13 +3,16 @@
 
 const auto failure = []( std::string_view str_err, const std::pair<HANDLE, HANDLE> handles = {} ) -> bool
 {
-	if ( handles.first ) // hProcess
-		CloseHandle( handles.first );
+	const auto [hProcess, hThread] = handles;
 
-	if ( handles.second ) // hThread
-		CloseHandle( handles.second );
+	if ( hProcess ) // hProcess
+		CloseHandle( hProcess );
+
+	if ( hThread ) // hThread
+		CloseHandle( hThread );
 
 	log_err( "%s", str_err );
+
 	return false;
 };
 
@@ -76,13 +79,12 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	return true;
 }
 
-bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer )
+bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, blackbone::eLoadFlags flags )
 {
-	auto proc_list = memory::get_process_list();
-
 	log_debug( "Waiting for process - [ %s ]", str_proc );
 
 	// update process list while process is not opened
+	auto proc_list = memory::get_process_list();
 	do
 	{
 		proc_list = memory::get_process_list();
@@ -129,7 +131,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 			if ( !ntopenfile_ptr )
 				return failure( "Failed to get NtOpenFile proc address?" );
 
-			char restore[5];
+			uint8_t restore[5];
 			std::memcpy( restore, ntopenfile_ptr, sizeof( restore ) );
 
 			const auto result = bb_proc.memory().Write( (uintptr_t) ntopenfile_ptr, restore );
@@ -157,14 +159,12 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	};
 
 	// mapping dll to the process
-	const auto call_result = bb_proc.mmap().MapImage( vec_buffer.size(), vec_buffer.data(), false, blackbone::WipeHeader, mod_callback );
-
-	// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55
-	log_debug( "Map Result - [ 0x%.8X ]", call_result.status );
+	const auto call_result = bb_proc.mmap().MapImage( vec_buffer.size(), vec_buffer.data(), false, flags, mod_callback );
 
 	if ( !call_result.success() )
 	{
-		log_err( "Failed to inject into - [ %s ]", str_proc );
+		// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55
+		log_err( "Failed to inject into - [ %s ] nt status - (0x%.8X)", str_proc, call_result.status );
 		bb_proc.Detach();
 
 		return false;

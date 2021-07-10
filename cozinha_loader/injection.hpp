@@ -5,7 +5,7 @@
 class c_injector
 {
 private:
-	bool map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer );
+	bool map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, blackbone::eLoadFlags flags = blackbone::WipeHeader );
 
 	void close_processes( std::vector<std::string_view> vec_processes );
 

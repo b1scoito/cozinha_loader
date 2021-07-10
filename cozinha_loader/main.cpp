@@ -4,7 +4,7 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 {
 	std::atexit( [] { std::this_thread::sleep_for( 10s ); } );
 
-	int argc; const auto* argv = CommandLineToArgvW( GetCommandLineW(), &argc );
+	int argc; auto* const argv = CommandLineToArgvW( GetCommandLineW(), &argc );
 
 #ifndef _DEBUG
 	const std::filesystem::path dll_path = argv[1] ? argv[1] : L"cheat.dll";
@@ -26,16 +26,11 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	std::cin >> str_proc_name;
 	std::cin.clear();
 
-	const auto start = std::chrono::high_resolution_clock::now();
-
 	// this function will inject vac3 bypass on steam and the dll on the target process
 	if ( !g_injector->init( str_proc_name, dll_path ) )
 		return EXIT_FAILURE;
 
-	const auto end = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double, std::milli> elapsed( end - start );
-
-	log_ok( "Done.", elapsed.count() );
+	log_ok( "Done." );
 
 	return EXIT_SUCCESS;
 }
