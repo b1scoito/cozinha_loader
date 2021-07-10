@@ -50,7 +50,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	const auto vac_buf_end = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double, std::milli> vac_buf_elapsed( vac_buf_end - vac_buf_start );
-	log_debug( "Done in %.f3ms.", vac_buf_elapsed );
+	log_debug( "Done in %.3fms.", vac_buf_elapsed );
 
 	// inject vac bypass to steam
 	if ( !map( "steam.exe", L"tier0_s.dll", vac_buffer ) )
@@ -67,7 +67,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	const auto dll_buf_end = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double, std::milli> dll_buf_elapsed( dll_buf_end - dll_buf_start );
-	log_debug( "Done in %.f3ms.", dll_buf_elapsed );
+	log_debug( "Done in %.3fms.", dll_buf_elapsed );
 
 	// inject dll to process
 	if ( !map( str_proc_name, L"serverbrowser.dll", dll_buffer ) )
