@@ -19,7 +19,7 @@ const auto failure = []( std::string_view str_err, const std::pair<HANDLE, HANDL
 bool c_injector::init( std::string_view str_proc_name, const std::filesystem::path dll_path )
 {
 	// closing processes
-	close_processes( { str_proc_name, "steam.exe" } );
+	this->close_processes( { str_proc_name, "steam.exe" } );
 
 	const auto steam_path = ext::get_steam_path();
 
@@ -29,7 +29,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	std::string launch_append {};
 
 	// i don't think it's a good idea to automatically open games from the list, but the code is here just in case.
-	//for ( const auto& it : vec_app_ids )
+	//for ( const auto& it : this->vec_app_ids )
 	//{
 	//	if ( it.second.find( str_proc_name ) != std::string::npos )
 	//		launch_append = string::format( "-applaunch %d", it.first );
@@ -56,7 +56,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	log_debug( "Done in %.3fms.", vac_buf_elapsed );
 
 	// inject vac bypass to steam
-	if ( !map( "steam.exe", L"tier0_s.dll", vac_buffer ) )
+	if ( !this->map( "steam.exe", L"tier0_s.dll", vac_buffer ) )
 		return false;
 
 	log_debug( "Writing dll to buffer..." );
@@ -73,7 +73,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	log_debug( "Done in %.3fms.", dll_buf_elapsed );
 
 	// inject dll to process
-	if ( !map( str_proc_name, L"serverbrowser.dll", dll_buffer ) )
+	if ( !this->map( str_proc_name, L"serverbrowser.dll", dll_buffer ) )
 		return false;
 
 	return true;
