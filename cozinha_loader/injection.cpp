@@ -16,19 +16,27 @@ const auto failure = []( std::string_view str_err, const std::pair<HANDLE, HANDL
 	return false;
 };
 
+const auto get_sys_dir = []() -> std::wstring
+{
+	wchar_t buf[MAX_PATH];
+	GetSystemDirectory( buf, sizeof( buf ) / 4 );
+
+	return std::wstring( buf );
+};
+
 bool c_injector::init( std::string_view str_proc_name, const std::filesystem::path dll_path )
 {
-	// closing processes
+	// Closing processes
 	this->close_processes( { str_proc_name, "steam.exe" } );
 
-	const auto steam_path = ext::get_steam_path();
+	const auto steam_path = util::get_steam_path();
 
 	if ( steam_path.empty() )
 		return failure( "Failed to retrieve steam path" );
 
 	std::string launch_append {};
 
-	// i don't think it's a good idea to automatically open games from the list, but the code is here just in case.
+	// I don't think it's a good idea to automatically open games from the list, but the code is here just in case.
 	//for ( const auto& it : this->vec_app_ids )
 	//{
 	//	if ( it.second.find( str_proc_name ) != std::string::npos )
@@ -55,7 +63,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	std::chrono::duration<double, std::milli> vac_buf_elapsed( vac_buf_end - vac_buf_start );
 	log_debug( "Done in %.3fms.", vac_buf_elapsed );
 
-	// inject vac bypass to steam
+	// Inject vac bypass to steam
 	if ( !this->map( "steam.exe", L"tier0_s.dll", vac_buffer ) )
 		return false;
 
@@ -64,7 +72,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	const auto dll_buf_start = std::chrono::high_resolution_clock::now();
 
 	std::vector<std::uint8_t> dll_buffer;
-	if ( !ext::read_file_to_memory( std::filesystem::absolute( dll_path ), &dll_buffer ) )
+	if ( !util::read_file_to_memory( std::filesystem::absolute( dll_path ), &dll_buffer ) )
 		return failure( "Failed to write DLL to memory!" );
 
 	const auto dll_buf_end = std::chrono::high_resolution_clock::now();
@@ -72,7 +80,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	std::chrono::duration<double, std::milli> dll_buf_elapsed( dll_buf_end - dll_buf_start );
 	log_debug( "Done in %.3fms.", dll_buf_elapsed );
 
-	// inject dll to process
+	// Inject dll to process
 	if ( !this->map( str_proc_name, L"serverbrowser.dll", dll_buffer ) )
 		return false;
 
@@ -83,7 +91,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 {
 	log_debug( "Waiting for process - [ %s ]", str_proc );
 
-	// update process list while process is not opened
+	// Update process list while process is not opened
 	auto proc_list = memory::get_process_list();
 	do
 	{
@@ -95,7 +103,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	blackbone::Process bb_proc;
 	bb_proc.Attach( memory::get_process_id_by_name( proc_list, str_proc ), PROCESS_ALL_ACCESS ); // PROCESS_ALL_ACCESS not needed perhaps? placed it back in
 
-	// wait for a process module so we can continue with injection
+	// Wait for a process module so we can continue with injection
 	log_debug( "Waiting for - [ %ls ] in %s", wstr_mod_name.data(), str_proc );
 
 	auto mod_ready = false;
@@ -116,12 +124,13 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 		std::this_thread::sleep_for( 500ms ); // 1s? fixes 0xC34... (i think i was calling the patch too early now)
 	}
 
-	// bypassing injection block by csgo (-allow_third_party_software)
+	// Bypassing injection block by csgo (-allow_third_party_software)
 	if ( str_proc.find( "csgo" ) != std::string::npos )
 	{
 		const auto patch_nt_open_file = [&]()
 		{
-			const auto ntdll = LoadLibrary( L"ntdll" );
+			const auto ntdll_path = string::format( "%ls\\ntdll.dll", get_sys_dir().data() );
+			const auto ntdll = LoadLibrary( string::to_unicode( ntdll_path ).data() );
 
 			if ( !ntdll )
 				return failure( "Failed to load ntdll?" );
@@ -146,7 +155,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 			return false;
 	}
 
-	// resolve PE imports
+	// Resolve PE imports
 	const auto mod_callback = []( blackbone::CallbackType type, void*, blackbone::Process&, const blackbone::ModuleData& modInfo )
 	{
 		if ( type == blackbone::PreCallback )
@@ -158,7 +167,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 		return blackbone::LoadData( blackbone::MT_Default, blackbone::Ldr_Ignore );
 	};
 
-	// mapping dll to the process
+	// Mapping dll to the process
 	const auto call_result = bb_proc.mmap().MapImage( vec_buffer.size(), vec_buffer.data(), false, flags, mod_callback );
 
 	if ( !call_result.success() )
@@ -170,7 +179,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 		return false;
 	}
 
-	// free memory and detach from process
+	// Free memory and detach from process
 	bb_proc.Detach();
 	log_ok( "Injected into - [ %s ].", str_proc );
 

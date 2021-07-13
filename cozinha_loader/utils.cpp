@@ -9,7 +9,7 @@ namespace string
 		return str;
 	}
 
-	std::string to_utf8( std::wstring wstr )
+	std::string to_utf8( std::wstring_view wstr )
 	{
 		if ( wstr.empty() )
 			return {};
@@ -22,7 +22,7 @@ namespace string
 		return ret;
 	}
 
-	std::wstring to_unicode( std::string str )
+	std::wstring to_unicode( std::string_view str )
 	{
 		if ( str.empty() )
 			return {};
@@ -36,7 +36,7 @@ namespace string
 	}
 }
 
-namespace ext
+namespace util
 {
 	bool read_file_to_memory( const std::filesystem::path& path, std::vector<std::uint8_t>* out_buffer )
 	{
