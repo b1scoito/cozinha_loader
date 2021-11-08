@@ -18,4 +18,4 @@ Any other error, please make an issue in the [issues section](https://github.com
 ![image](https://user-images.githubusercontent.com/17802984/125178502-0d68b800-e1bc-11eb-86a4-7c76da1aa0a8.png)
 
 ### Backstory
-I made this project for some friends hence the name, open-source for you guys.
+I made this project for some friends to use, now open-source for you guys.
