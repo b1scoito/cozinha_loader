@@ -1,31 +1,10 @@
 #include "pch.hpp"
 #include "injection.hpp"
 
-const auto failure = []( std::string_view str_err, const std::pair<HANDLE, HANDLE> handles = {} ) -> bool
+bool c_injector::initiaze( std::string_view str_proc_name, const std::filesystem::path dll_path )
 {
-	const auto [hProcess, hThread] = handles;
+	log_debug( "Closing processes" );
 
-	if ( hProcess ) // hProcess
-		CloseHandle( hProcess );
-
-	if ( hThread ) // hThread
-		CloseHandle( hThread );
-
-	log_err( "%s", str_err );
-
-	return false;
-};
-
-const auto get_sys_dir = []() -> std::wstring
-{
-	wchar_t buf[MAX_PATH];
-	GetSystemDirectory( buf, sizeof( buf ) / 4 );
-
-	return std::wstring( buf );
-};
-
-bool c_injector::init( std::string_view str_proc_name, const std::filesystem::path dll_path )
-{
 	// Closing processes
 	this->close_processes( { str_proc_name, "steam.exe" } );
 
@@ -34,7 +13,7 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	if ( steam_path.empty() )
 		return failure( "Failed to retrieve steam path" );
 
-	std::string launch_append {};
+	std::string launch_append = {};
 
 	// I don't think it's a good idea to automatically open games from the list, but the code is here just in case.
 	//for ( const auto& it : this->vec_app_ids )
@@ -52,16 +31,8 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 	CloseHandle( pi.hProcess );
 	CloseHandle( pi.hThread );
 
-	log_debug( "Writing vac bypass to buffer..." );
-
-	const auto vac_buf_start = std::chrono::high_resolution_clock::now();
-
+	// This won't take long
 	std::vector<std::uint8_t> vac_buffer( std::begin( vac3_data ), std::end( vac3_data ) );
-
-	const auto vac_buf_end = std::chrono::high_resolution_clock::now();
-
-	std::chrono::duration<double, std::milli> vac_buf_elapsed( vac_buf_end - vac_buf_start );
-	log_debug( "Done in %.3fms.", vac_buf_elapsed );
 
 	// Inject vac bypass to steam
 	if ( !this->map( "steam.exe", L"tier0_s.dll", vac_buffer ) )
@@ -69,16 +40,11 @@ bool c_injector::init( std::string_view str_proc_name, const std::filesystem::pa
 
 	log_debug( "Writing dll to buffer..." );
 
-	const auto dll_buf_start = std::chrono::high_resolution_clock::now();
-
-	std::vector<std::uint8_t> dll_buffer;
+	std::vector<std::uint8_t> dll_buffer = {};
 	if ( !util::read_file_to_memory( std::filesystem::absolute( dll_path ), &dll_buffer ) )
 		return failure( "Failed to write DLL to memory!" );
 
-	const auto dll_buf_end = std::chrono::high_resolution_clock::now();
-
-	std::chrono::duration<double, std::milli> dll_buf_elapsed( dll_buf_end - dll_buf_start );
-	log_debug( "Done in %.3fms.", dll_buf_elapsed );
+	log_debug( "Done" );
 
 	// Inject dll to process
 	if ( !this->map( str_proc_name, L"serverbrowser.dll", dll_buffer ) )
@@ -101,7 +67,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	while ( !memory::is_process_open( proc_list, str_proc ) );
 
 	blackbone::Process bb_proc;
-	bb_proc.Attach( memory::get_process_id_by_name( proc_list, str_proc ), PROCESS_ALL_ACCESS ); // PROCESS_ALL_ACCESS not needed perhaps? placed it back in
+	bb_proc.Attach( memory::get_process_id_by_name( proc_list, str_proc ), PROCESS_ALL_ACCESS ); // PROCESS_ALL_ACCESS not needed perhaps?
 
 	// Wait for a process module so we can continue with injection
 	log_debug( "Waiting for - [ %ls ] in %s", wstr_mod_name.data(), str_proc );
@@ -129,7 +95,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	{
 		const auto patch_nt_open_file = [&]()
 		{
-			const auto ntdll_path = string::format( "%ls\\ntdll.dll", get_sys_dir().data() );
+			const auto ntdll_path = string::format( "%ls\\ntdll.dll", get_system_directory().data() );
 			const auto ntdll = LoadLibrary( string::to_unicode( ntdll_path ).data() );
 
 			if ( !ntdll )
@@ -140,10 +106,10 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 			if ( !ntopenfile_ptr )
 				return failure( "Failed to get NtOpenFile proc address?" );
 
-			uint8_t restore[5];
+			std::uint8_t restore[5];
 			std::memcpy( restore, ntopenfile_ptr, sizeof( restore ) );
 
-			const auto result = bb_proc.memory().Write( (uintptr_t) ntopenfile_ptr, restore );
+			const auto result = bb_proc.memory().Write( (std::uintptr_t) ntopenfile_ptr, restore );
 
 			if ( !NT_SUCCESS( result ) )
 				return failure( "Failed to write patch memory" );
