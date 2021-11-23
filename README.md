@@ -1,5 +1,5 @@
 ## Info
-Automatically inject a DLL into the selected process with _VAC3 bypass_.
+Automatically inject a DLL into the selected process with [_VAC3 bypass_](https://github.com/zyhp/vac3_inhibitor).
 
 This will only, most likely, work only with _source engine_ games in _steam_ that use _VAC3_ as a protection measure and load `serverbrowser.dll` as a process module.
 
