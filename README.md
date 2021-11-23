@@ -11,7 +11,7 @@ If your error is `msvcp140.dll`, Please install the following libraries, `x86` i
 Any other error, please make an issue in the [issues section](https://github.com/b1scoito/cozinha_loader/issues).
 
 ## Compiling
-- Visual Studio 2019
+- Visual Studio 2019 >
 - [BlackBone Static Library](https://github.com/DarthTon/Blackbone)
 
 ## Screenshot
