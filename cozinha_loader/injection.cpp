@@ -1,61 +1,62 @@
 #include "pch.hpp"
 #include "injection.hpp"
 
-bool c_injector::initiaze( std::string_view str_proc_name, const std::filesystem::path dll_path )
+bool c_injector::initiaze( const std::filesystem::path dll_path )
 {
-	log_debug( "Closing processes" );
+	log_debug( L"Closing processes..." );
 
 	// Closing processes
-	this->close_processes( { str_proc_name, "steam.exe" } );
+	this->close_processes( { string::to_unicode( vars::str_process_name ), L"steam.exe" } );
 
 	const auto steam_path = util::get_steam_path();
 
 	if ( steam_path.empty() )
-		return failure( "Failed to retrieve steam path" );
+		return failure( L"Failed to get Steam path!" );
 
-	std::string launch_append = {};
+	std::wstring launch_append = {};
 
-	// I don't think it's a good idea to automatically open games from the list, but the code is here just in case.
-	//for ( const auto& it : this->vec_app_ids )
-	//{
-	//	if ( it.second.find( str_proc_name ) != std::string::npos )
-	//		launch_append = string::format( "-applaunch %d", it.first );
-	//}
+	if ( vars::b_open_game_automatically )
+	{
+		for ( const auto& it : this->vec_app_ids )
+		{
+			if ( it.second.find( string::to_unicode( vars::str_process_name ) ) != std::wstring::npos )
+				launch_append = string::format( L"-applaunch %d", it.first );
+		}
+	}
 
-	log_debug( "Opening steam [ %ls ]", steam_path.c_str() );
+	log_debug( L"Opening steam at - %s", steam_path.data() );
 
-	PROCESS_INFORMATION pi;
-	if ( !memory::open_process( steam_path, { L"-console", string::to_unicode( launch_append ) }, pi ) )
-		return failure( "Failed to open steam", { pi.hProcess, pi.hThread } );
+	PROCESS_INFORMATION pi; // Could use the current handle instead of closing it for steam, might do it in the future...
+	if ( !memory::open_process( steam_path, { L"-console", launch_append }, pi ) )
+		return failure( L"Failed to open Steam!", { pi.hProcess, pi.hThread } );
 
 	CloseHandle( pi.hProcess );
 	CloseHandle( pi.hThread );
 
-	// This won't take long
-	std::vector<std::uint8_t> vac_buffer( std::begin( vac3_data ), std::end( vac3_data ) );
+	if ( vars::b_inject_vac_bypass )
+	{
+		// This won't take long
+		std::vector<std::uint8_t> vac_buffer( std::begin( vac3_data ), std::end( vac3_data ) );
 
-	// Inject vac bypass to steam
-	if ( !this->map( "steam.exe", L"tier0_s.dll", vac_buffer ) )
-		return false;
-
-	log_debug( "Writing dll to buffer..." );
+		// Inject vac bypass to steam
+		if ( !this->map( L"steam.exe", string::to_unicode( vars::str_steam_mod_name ), vac_buffer ) )
+			return false;
+	}
 
 	std::vector<std::uint8_t> dll_buffer = {};
 	if ( !util::read_file_to_memory( std::filesystem::absolute( dll_path ), &dll_buffer ) )
-		return failure( "Failed to write DLL to memory!" );
+		return failure( L"Failed to write DLL to memory!" );
 
-	log_debug( "Done" );
-
-	// Inject dll to process
-	if ( !this->map( str_proc_name, L"serverbrowser.dll", dll_buffer ) )
+	// Inject DLL to process
+	if ( !this->map( string::to_unicode( vars::str_process_name ), string::to_unicode( vars::str_process_mod_name ), dll_buffer ) )
 		return false;
 
 	return true;
 }
 
-bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, blackbone::eLoadFlags flags )
+bool c_injector::map( std::wstring_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, blackbone::eLoadFlags flags )
 {
-	log_debug( "Waiting for process - [ %s ]", str_proc );
+	log_debug( L"Waiting for %s to open...", str_proc.data() );
 
 	// Update process list while process is not opened
 	auto proc_list = memory::get_process_list();
@@ -70,7 +71,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	bb_proc.Attach( memory::get_process_id_by_name( proc_list, str_proc ), PROCESS_ALL_ACCESS ); // PROCESS_ALL_ACCESS not needed perhaps?
 
 	// Wait for a process module so we can continue with injection
-	log_debug( "Waiting for - [ %ls ] in %s", wstr_mod_name.data(), str_proc );
+	log_debug( L"Waiting for module %s in %s...", wstr_mod_name.data(), str_proc.data() );
 
 	auto mod_ready = false;
 	while ( !mod_ready )
@@ -91,20 +92,20 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	}
 
 	// Bypassing injection block by csgo (-allow_third_party_software)
-	if ( str_proc.find( "csgo" ) != std::string::npos )
+	if ( str_proc.find( L"csgo" ) != std::wstring::npos )
 	{
 		const auto patch_nt_open_file = [&]()
 		{
-			const auto ntdll_path = string::format( "%ls\\ntdll.dll", get_system_directory().data() );
-			const auto ntdll = LoadLibrary( string::to_unicode( ntdll_path ).data() );
+			const auto ntdll_path = string::format( L"%s\\ntdll.dll", get_system_directory().data() );
+			const auto ntdll = LoadLibrary( ntdll_path.data() );
 
 			if ( !ntdll )
-				return failure( "Failed to load ntdll?" );
+				return failure( L"Failed to load ntdll?" );
 
 			void* ntopenfile_ptr = GetProcAddress( ntdll, "NtOpenFile" );
 
 			if ( !ntopenfile_ptr )
-				return failure( "Failed to get NtOpenFile proc address?" );
+				return failure( L"Failed to get NtOpenFile proc address?" );
 
 			std::uint8_t restore[5];
 			std::memcpy( restore, ntopenfile_ptr, sizeof( restore ) );
@@ -112,13 +113,13 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 			const auto result = bb_proc.memory().Write( (std::uintptr_t) ntopenfile_ptr, restore );
 
 			if ( !NT_SUCCESS( result ) )
-				return failure( "Failed to write patch memory" );
+				return failure( L"Failed to write patch memory!" );
 
 			return true;
 		};
 
 		if ( !patch_nt_open_file() )
-			return false;
+			return failure( L"Failed to patch NtOpenFile!" );
 	}
 
 	// Resolve PE imports
@@ -139,7 +140,7 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 	if ( !call_result.success() )
 	{
 		// https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55
-		log_err( "Failed to inject into - [ %s ] nt status - (0x%.8X)", str_proc, call_result.status );
+		log_err( L"Failed to inject into %s. NT Status: 0x%.8X", str_proc.data(), call_result.status );
 		bb_proc.Detach();
 
 		return false;
@@ -147,12 +148,12 @@ bool c_injector::map( std::string_view str_proc, std::wstring_view wstr_mod_name
 
 	// Free memory and detach from process
 	bb_proc.Detach();
-	log_ok( "Injected into - [ %s ].", str_proc );
+	log_ok( L"Injected into %s successfully!", str_proc.data() );
 
 	return true;
 }
 
-void c_injector::close_processes( std::vector<std::string_view> vec_processes )
+void c_injector::close_processes( std::vector<std::wstring_view> vec_processes )
 {
 	auto proc_list = memory::get_process_list();
 	for ( const auto& proc : vec_processes )

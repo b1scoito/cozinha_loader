@@ -1,35 +1,33 @@
 #include "pch.hpp"
+#include "injection.hpp"
 
 INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd )
 {
+
 	std::atexit( [] { std::this_thread::sleep_for( 10s ); } );
 
 	std::int32_t argc; auto* const argv = CommandLineToArgvW( GetCommandLineW(), &argc );
 
-#ifndef _DEBUG
-	const std::filesystem::path dll_path = argv[1] ? argv[1] : L"cheat.dll";
-#else
-	const std::filesystem::path dll_path = "debug.dll";
-#endif
-
-	if ( !std::filesystem::exists( dll_path ) )
+	if ( !vars::get_global_vars( ) )
 	{
-		log_err( "DLL not found! Place a dll file called cheat.dll in the same folder as the loader, or drag'n'drop the dll into the exe." );
+		log_err( L"Failed to load config!" );
 		return EXIT_FAILURE;
 	}
 
-	log_debug( "DLL path - [ %s ]", std::filesystem::absolute( dll_path ).string().c_str() );
-
-	std::string str_proc_name;
-	log_prompt( "Target process name: " );
-
-	std::cin >> str_proc_name;
-	std::cin.clear();
-
-	if ( !g_injector->initiaze( str_proc_name, dll_path ) )
+	const std::filesystem::path dll_path = argv[1] ? argv[1] : L"cheat.dll";
+	
+	if ( !std::filesystem::exists( dll_path ) )
+	{
+		log_err( L"DLL Not found. Place a DLL file called cheat.dll in the same folder as the loader, or drag'n'drop the dll into the exe." );
 		return EXIT_FAILURE;
-
-	log_ok( "Done." );
+	}
+	
+	log_debug( L"DLL Path: %s", std::filesystem::absolute( dll_path ).wstring().data() );
+	
+	if ( !g_injector->initiaze( dll_path ) )
+		return EXIT_FAILURE;
+	
+	log_ok( L"Done." );
 
 	return EXIT_SUCCESS;
 }

@@ -3,26 +3,13 @@
 
 namespace string
 {
-	std::string to_lower( std::string str )
+	std::wstring to_lower( std::wstring str )
 	{
 		std::transform( str.begin(), str.end(), str.begin(), static_cast<int( * )( int )>( ::tolower ) );
 		return str;
 	}
 
-	std::string to_utf8( std::wstring_view wstr )
-	{
-		if ( wstr.empty() )
-			return {};
-
-		const auto size = WideCharToMultiByte( CP_UTF8, 0, wstr.data(), (int) wstr.size(), 0, 0, 0, 0 );
-		auto ret = std::string( size, 0 );
-
-		WideCharToMultiByte( CP_UTF8, 0, wstr.data(), (int) wstr.size(), ret.data(), size, 0, 0 );
-
-		return ret;
-	}
-
-	std::wstring to_unicode( std::string_view str )
+	std::wstring to_unicode( std::string str )
 	{
 		if ( str.empty() )
 			return {};
@@ -51,7 +38,7 @@ namespace util
 		return true;
 	}
 
-	bool write_file_from_memory( std::string_view name, std::vector<std::uint8_t> buffer )
+	bool write_file_from_memory( std::wstring_view name, std::vector<std::uint8_t> buffer )
 	{
 		std::ofstream file( name );
 		if ( file.fail() )

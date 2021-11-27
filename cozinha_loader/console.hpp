@@ -37,9 +37,7 @@ public:
 		AttachConsole( GetCurrentProcessId() );
 
 		if ( !title_name.empty() )
-		{
 			SetConsoleTitle( title_name.data() );
-		}
 
 		FILE* conin, * conout;
 
@@ -56,30 +54,27 @@ public:
 	}
 
 	template< typename ... arg >
-	void print( const msg_type_t type, const std::string& func, const std::string& format, arg ... a )
+	void print( const msg_type_t type, const std::string_view func, std::wstring_view format, arg ... args )
 	{
 		static auto* h_console = GetStdHandle( STD_OUTPUT_HANDLE );
 		std::unique_lock<decltype( mutex )> lock( mutex );
 
-		const size_t size = static_cast<size_t>( 1 ) + std::snprintf( nullptr, 0, format.c_str(), a ... );
-		const std::unique_ptr<char[]> buf( new char[size] );
-		std::snprintf( buf.get(), size, format.c_str(), a ... );
-		const auto formated = std::string( buf.get(), buf.get() + size - 1 );
+		const auto formatted = string::format( format, args ... );
 
 		if ( type != msg_type_t::LNONE )
 		{
 			SetConsoleTextAttribute( h_console, static_cast<WORD>( type ) );
-			std::cout << "[";
+			std::wcout << L"[";
 			std::cout << type;
-			std::cout << "] ";
+			std::wcout << L"] ";
 
 #ifdef _DEBUG
 			SetConsoleTextAttribute( h_console, 15 /* white */ );
-			std::cout << "[ ";
+			std::wcout << L"[ ";
 			SetConsoleTextAttribute( h_console, static_cast<WORD>( type ) );
 			std::cout << func;
 			SetConsoleTextAttribute( h_console, 15 /* white */ );
-			std::cout << " ] ";
+			std::wcout << L" ] ";
 #endif
 		}
 
@@ -89,9 +84,9 @@ public:
 			SetConsoleTextAttribute( h_console, 15 /* white */ );
 
 		if ( type == msg_type_t::LPROMPT )
-			std::cout << formated;
+			std::wcout << formatted;
 		else
-			std::cout << formated << std::endl;
+			std::wcout << formatted << L"\n";
 	}
 };
 

@@ -5,14 +5,12 @@
 #include <fstream>
 #include <filesystem>
 
-#include <Windows.h>
+#include <windows.h>
 
 // defs
-#include "logger.hpp"
 #include "utils.hpp"
-#include "memory.hpp"
-#include "vac3_data.hpp"
-#include "injection.hpp"
+#include "console.hpp"
+#include "vars.hpp"
 
 // other
 using namespace std::chrono_literals;

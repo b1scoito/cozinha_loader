@@ -3,23 +3,21 @@
 namespace string
 {
 	// Format string
-	template<typename ... args>
-	std::string format( const std::string& format, args ... arg )
+	template<typename ... arg>
+	static std::wstring format( std::wstring_view fmt, arg ... args )
 	{
-		const size_t size = std::snprintf( nullptr, 0, format.c_str(), arg ... ) + 1;
-		std::unique_ptr<char[]> buf( new char[size] );
-		std::snprintf( buf.get(), size, format.c_str(), arg ... );
-		return std::string( buf.get(), buf.get() + size - 1 );
+		const int size = std::swprintf( nullptr, NULL, fmt.data(), args ... ) + 1;
+		const auto buf = std::make_unique<wchar_t[]>( size );
+		std::swprintf( buf.get(), size, fmt.data(), args ... );
+
+		return std::wstring( buf.get(), ( buf.get() + size ) - 1 );
 	}
 
-	// Transforms string to lowercase
-	std::string to_lower( std::string str );
-
-	// Converts wstring to string
-	std::string to_utf8( std::wstring_view wstr );
+	// Transforms wstring to lowercase
+	std::wstring to_lower( std::wstring str );
 
 	// Converts string to wstring
-	std::wstring to_unicode( std::string_view str );
+	std::wstring to_unicode( std::string str );
 }
 
 namespace util
@@ -28,7 +26,7 @@ namespace util
 	bool read_file_to_memory( const std::filesystem::path& path, std::vector<std::uint8_t>* out_buffer );
 
 	// Reads an unsigned char array and writes into a binary file
-	bool write_file_from_memory( std::string_view name, std::vector<std::uint8_t> buffer );
+	bool write_file_from_memory( std::wstring_view name, std::vector<std::uint8_t> buffer );
 
 	// Returns the steam path from regedit
 	std::wstring get_steam_path();

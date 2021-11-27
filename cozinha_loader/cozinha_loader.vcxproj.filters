@@ -19,14 +19,20 @@
     <Filter Include="utils\vac3_bypass">
       <UniqueIdentifier>{1771c7ca-3cf1-4f5a-8fb0-c784c17f5d96}</UniqueIdentifier>
     </Filter>
-    <Filter Include="utils\pch">
+    <Filter Include="utils\global">
+      <UniqueIdentifier>{5b825a68-328c-4952-9229-d4e1fa3190f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\precompiled">
       <UniqueIdentifier>{ebfadaa9-2c80-4c74-b27c-c01e8ed57886}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\inih">
+      <UniqueIdentifier>{22f53b38-bd7c-4675-91b9-79a711dedcc7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
-      <Filter>utils\pch</Filter>
+      <Filter>utils\precompiled</Filter>
     </ClCompile>
     <ClCompile Include="injection.cpp">
       <Filter>loader</Filter>
@@ -37,12 +43,18 @@
     <ClCompile Include="memory.cpp">
       <Filter>utils\memory</Filter>
     </ClCompile>
+    <ClCompile Include="inih.cpp">
+      <Filter>utils\inih</Filter>
+    </ClCompile>
+    <ClCompile Include="ini.c">
+      <Filter>utils\inih</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.hpp">
-      <Filter>utils\pch</Filter>
+      <Filter>utils\precompiled</Filter>
     </ClInclude>
-    <ClInclude Include="logger.hpp">
+    <ClInclude Include="console.hpp">
       <Filter>utils\console</Filter>
     </ClInclude>
     <ClInclude Include="memory.hpp">
@@ -56,6 +68,15 @@
     </ClInclude>
     <ClInclude Include="vac3_data.hpp">
       <Filter>utils\vac3_bypass</Filter>
+    </ClInclude>
+    <ClInclude Include="vars.hpp">
+      <Filter>utils\global</Filter>
+    </ClInclude>
+    <ClInclude Include="inih.hpp">
+      <Filter>utils\inih</Filter>
+    </ClInclude>
+    <ClInclude Include="ini.h">
+      <Filter>utils\inih</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

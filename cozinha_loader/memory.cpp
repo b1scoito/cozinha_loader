@@ -22,7 +22,7 @@ namespace memory
 		return CreateProcess( nullptr, params.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi );
 	}
 
-	bool is_process_open( const std::vector<std::pair<std::uint32_t, std::string>>& vec_processes, std::string_view str_proc )
+	bool is_process_open( const std::vector<std::pair<std::uint32_t, std::wstring>>& vec_processes, std::wstring_view str_proc )
 	{
 		if ( vec_processes.empty() )
 			return {};
@@ -34,9 +34,9 @@ namespace memory
 		for ( const auto& ctx : vec_processes )
 		{
 			auto ep = string::to_lower( ctx.second );
-			if ( target.find( ".exe" ) == std::string::npos )
+			if ( target.find( L".exe" ) == std::wstring::npos )
 			{
-				if ( ep.find( target ) == std::string::npos )
+				if ( ep.find( target ) == std::wstring::npos )
 					continue;
 			}
 			else
@@ -56,7 +56,7 @@ namespace memory
 		return {};
 	}
 
-	bool kill_process( const std::vector<std::pair<std::uint32_t, std::string>>& vec_processes, std::string_view str_proc )
+	bool kill_process( const std::vector<std::pair<std::uint32_t, std::wstring>>& vec_processes, std::wstring_view str_proc )
 	{
 		if ( vec_processes.empty() )
 			return {};
@@ -69,9 +69,9 @@ namespace memory
 		for ( const auto& ctx : vec_processes )
 		{
 			auto ep = string::to_lower( ctx.second );
-			if ( target.find( ".exe" ) == std::string::npos )
+			if ( target.find( L".exe" ) == std::wstring::npos )
 			{
-				if ( ep.find( target ) == std::string::npos )
+				if ( ep.find( target ) == std::wstring::npos )
 					continue;
 			}
 			else
@@ -93,7 +93,7 @@ namespace memory
 		return executed;
 	}
 
-	std::uint32_t get_process_id_by_name( const std::vector<std::pair<std::uint32_t, std::string>>& vec_processes, std::string_view str_proc )
+	std::uint32_t get_process_id_by_name( const std::vector<std::pair<std::uint32_t, std::wstring>>& vec_processes, std::wstring_view str_proc )
 	{
 		if ( vec_processes.empty() )
 			return {};
@@ -105,9 +105,9 @@ namespace memory
 		for ( const auto& ctx : vec_processes )
 		{
 			auto ep = string::to_lower( ctx.second );
-			if ( target.find( ".exe" ) == std::string::npos )
+			if ( target.find( L".exe" ) == std::wstring::npos )
 			{
-				if ( ep.find( target ) == std::string::npos )
+				if ( ep.find( target ) == std::wstring::npos )
 					continue;
 			}
 			else
@@ -122,9 +122,9 @@ namespace memory
 		return {};
 	}
 
-	std::vector<std::pair<std::uint32_t, std::string>> get_process_list()
+	std::vector<std::pair<std::uint32_t, std::wstring>> get_process_list()
 	{
-		std::vector<std::pair<std::uint32_t, std::string>> vec_list {};
+		std::vector<std::pair<std::uint32_t, std::wstring>> vec_list {};
 
 		const auto h_handle = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, NULL );
 
@@ -135,7 +135,7 @@ namespace memory
 			return {};
 
 		while ( Process32Next( h_handle, &m_entry ) )
-			vec_list.emplace_back( m_entry.th32ProcessID, string::to_utf8( m_entry.szExeFile ) ); // string::to_utf8
+			vec_list.emplace_back( m_entry.th32ProcessID, m_entry.szExeFile );
 
 		CloseHandle( h_handle );
 
