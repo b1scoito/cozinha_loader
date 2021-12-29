@@ -1,40 +1,39 @@
 #include "pch.hpp"
 #include "injection.hpp"
 
-bool c_injector::initiaze( const std::filesystem::path dll_path )
+bool c_injector::initalize( const std::filesystem::path dll_path )
 {
-	log_debug( L"Closing processes..." );
-
-	// Closing processes
-	this->close_processes( { string::to_unicode( vars::str_process_name ), L"steam.exe" } );
-
-	const auto steam_path = util::get_steam_path();
-
-	if ( steam_path.empty() )
-		return failure( L"Failed to get Steam path!" );
-
-	std::wstring launch_append = {};
-
-	if ( vars::b_open_game_automatically )
-	{
-		for ( const auto& it : this->vec_app_ids )
-		{
-			if ( it.second.find( string::to_unicode( vars::str_process_name ) ) != std::wstring::npos )
-				launch_append = string::format( L"-applaunch %d", it.first );
-		}
-	}
-
-	log_debug( L"Opening steam at - %s", steam_path.data() );
-
-	PROCESS_INFORMATION pi; // Could use the current handle instead of closing it for steam, might do it in the future...
-	if ( !memory::open_process( steam_path, { L"-console", launch_append }, pi ) )
-		return failure( L"Failed to open Steam!", { pi.hProcess, pi.hThread } );
-
-	CloseHandle( pi.hProcess );
-	CloseHandle( pi.hThread );
-
 	if ( vars::b_inject_vac_bypass )
 	{
+		log_debug( L"Closing processes..." );
+
+		// Closing processes
+		this->close_processes( { string::to_unicode( vars::str_process_name ), L"steam.exe" } );
+
+		const auto steam_path = util::get_steam_path();
+
+		if ( steam_path.empty() )
+			return failure( L"Failed to get Steam path!" );
+
+		log_debug( L"Opening Steam at - %s", steam_path.data() );
+
+		std::wstring launch_append = {};
+		if ( vars::b_open_game_automatically )
+		{
+			for ( const auto& it : this->vec_app_ids )
+			{
+				if ( it.second.find( string::to_unicode( vars::str_process_name ) ) != std::wstring::npos )
+					launch_append = string::format( L"-applaunch %d", it.first );
+			}
+		}
+
+		PROCESS_INFORMATION pi; // Could use the current handle instead of closing it for steam, might do it in the future...
+		if ( !memory::open_process( steam_path, { L"-console", launch_append }, pi ) )
+			return failure( L"Failed to open Steam!", { pi.hProcess, pi.hThread } );
+
+		CloseHandle( pi.hProcess );
+		CloseHandle( pi.hThread );
+
 		// This won't take long
 		std::vector<std::uint8_t> vac_buffer( std::begin( vac3_data ), std::end( vac3_data ) );
 
@@ -96,7 +95,7 @@ bool c_injector::map( std::wstring_view str_proc, std::wstring_view wstr_mod_nam
 	{
 		const auto patch_nt_open_file = [&]()
 		{
-			const auto ntdll_path = string::format( L"%s\\ntdll.dll", get_system_directory().data() );
+			const auto ntdll_path = string::format( L"%s\\ntdll.dll", util::get_system_directory().data() );
 			const auto ntdll = LoadLibrary( ntdll_path.data() );
 
 			if ( !ntdll )

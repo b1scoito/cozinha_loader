@@ -30,4 +30,10 @@ namespace util
 
 	// Returns the steam path from regedit
 	std::wstring get_steam_path();
+
+	// Returns the system directory
+	std::wstring get_system_directory();
+
+	// Returns the current executable path
+	std::wstring get_executable_path();
 }

@@ -20,14 +20,6 @@ const auto failure = []( std::wstring_view str_err, const std::pair<HANDLE, HAND
 	return false;
 };
 
-const auto get_system_directory = []() -> std::wstring
-{
-	wchar_t buf[MAX_PATH];
-	GetSystemDirectory( buf, sizeof( buf ) / 4 );
-
-	return std::wstring( buf );
-};
-
 class c_injector
 {
 private:
@@ -47,7 +39,7 @@ public:
 	~c_injector() = default;
 
 	// Initialize routine
-	bool initiaze( const std::filesystem::path dll_path );
+	bool initalize( const std::filesystem::path dll_path );
 };
 
 inline auto g_injector = std::make_unique<c_injector>();

@@ -74,4 +74,20 @@ namespace util
 
 		return std::wstring( steam_path_reg ) + L"\"";
 	}
+
+	std::wstring get_system_directory()
+	{
+		wchar_t buf[MAX_PATH];
+		GetSystemDirectory( buf, MAX_PATH );
+
+		return std::wstring( buf );
+	}
+
+	std::wstring get_executable_path()
+	{
+		wchar_t buf[MAX_PATH];
+		GetModuleFileName( NULL, buf, MAX_PATH );
+
+		return std::wstring( buf );
+	}
 }

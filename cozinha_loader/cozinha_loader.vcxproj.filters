@@ -43,10 +43,10 @@
     <ClCompile Include="memory.cpp">
       <Filter>utils\memory</Filter>
     </ClCompile>
-    <ClCompile Include="inih.cpp">
+    <ClCompile Include="inih\inih.cpp">
       <Filter>utils\inih</Filter>
     </ClCompile>
-    <ClCompile Include="ini.c">
+    <ClCompile Include="inih\ini.c">
       <Filter>utils\inih</Filter>
     </ClCompile>
   </ItemGroup>
@@ -72,10 +72,10 @@
     <ClInclude Include="vars.hpp">
       <Filter>utils\global</Filter>
     </ClInclude>
-    <ClInclude Include="inih.hpp">
+    <ClInclude Include="inih\inih.hpp">
       <Filter>utils\inih</Filter>
     </ClInclude>
-    <ClInclude Include="ini.h">
+    <ClInclude Include="inih\ini.h">
       <Filter>utils\inih</Filter>
     </ClInclude>
   </ItemGroup>

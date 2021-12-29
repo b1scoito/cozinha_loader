@@ -1,9 +1,10 @@
 #include "pch.hpp"
 #include "injection.hpp"
 
-INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd )
+INT WINAPI WinMain( _In_ HINSTANCE hInstance, 
+	_In_opt_ HINSTANCE hPrevInstance, 
+	_In_ LPSTR lpCmdLine, _In_ int nShowCmd )
 {
-
 	std::atexit( [] { std::this_thread::sleep_for( 10s ); } );
 
 	std::int32_t argc; auto* const argv = CommandLineToArgvW( GetCommandLineW(), &argc );
@@ -14,7 +15,7 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		return EXIT_FAILURE;
 	}
 
-	const std::filesystem::path dll_path = argv[1] ? argv[1] : L"cheat.dll";
+	const std::filesystem::path dll_path = argv[1] ? argv[1] : string::to_unicode( vars::str_dll_name );
 	
 	if ( !std::filesystem::exists( dll_path ) )
 	{
@@ -24,7 +25,7 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	
 	log_debug( L"DLL Path: %s", std::filesystem::absolute( dll_path ).wstring().data() );
 	
-	if ( !g_injector->initiaze( dll_path ) )
+	if ( !g_injector->initalize( dll_path ) )
 		return EXIT_FAILURE;
 	
 	log_ok( L"Done." );
