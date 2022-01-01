@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -47,16 +47,16 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>.\out\debug\</OutDir>
     <IntDir>.\out\debug\obj\</IntDir>
-    <IncludePath>D:\Libs\BlackBone\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Libs\BlackBone\lib\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\biscoito\Desktop\stuff\Libs\BlackBone\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\biscoito\Desktop\stuff\Libs\BlackBone\Lib\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>
     </LinkIncremental>
     <OutDir>.\out\release\</OutDir>
     <IntDir>.\out\release\obj\</IntDir>
-    <LibraryPath>D:\Libs\BlackBone\lib\Release;$(LibraryPath)</LibraryPath>
-    <IncludePath>D:\Libs\BlackBone\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\biscoito\Desktop\stuff\Libs\BlackBone\Lib\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\biscoito\Desktop\stuff\Libs\BlackBone\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnabled>false</VcpkgEnabled>

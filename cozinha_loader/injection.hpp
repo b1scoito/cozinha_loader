@@ -24,10 +24,13 @@ class c_injector
 {
 private:
 	// Manual maps buffer into process
-	bool map( std::wstring_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, blackbone::eLoadFlags flags = blackbone::WipeHeader );
+	bool map(std::wstring_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, blackbone::eLoadFlags flags = blackbone::WipeHeader);
 
 	// Close an array of processes
-	void close_processes( std::vector<std::wstring_view> vec_processes );
+	void close_processes(std::vector<std::wstring> vec_processes);
+
+	// A heartbeat thread for the vac bypass
+	void check_for_steam_thread();
 
 	// List of AppIDs and process names, accepting PRs on this.
 	const std::vector<std::pair<std::uint32_t, std::wstring_view>> vec_app_ids = {

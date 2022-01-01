@@ -15,18 +15,17 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance,
 		return EXIT_FAILURE;
 	}
 
-	const std::filesystem::path dll_path = argv[1] ? argv[1] : string::to_unicode( vars::str_dll_name );
+	vars::global_dll_path = argv[1] ? argv[1] : string::to_unicode( vars::str_dll_name );
 	
-	if ( !std::filesystem::exists( dll_path ) )
+	if ( !std::filesystem::exists(vars::global_dll_path) )
 	{
 		log_err( L"DLL Not found. Place a DLL file called cheat.dll in the same folder as the loader, or drag'n'drop the dll into the exe." );
 		return EXIT_FAILURE;
 	}
 	
-	log_debug( L"DLL Path: %s", std::filesystem::absolute( dll_path ).wstring().data() );
+	log_debug( L"DLL Path: %s", std::filesystem::absolute(vars::global_dll_path).wstring().data() );
 	
-	if ( !g_injector->initalize( dll_path ) )
-		return EXIT_FAILURE;
+	g_injector->initalize(vars::global_dll_path);
 	
 	log_ok( L"Done." );
 

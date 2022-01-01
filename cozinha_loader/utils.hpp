@@ -26,7 +26,7 @@ namespace util
 	bool read_file_to_memory( const std::filesystem::path& path, std::vector<std::uint8_t>* out_buffer );
 
 	// Reads an unsigned char array and writes into a binary file
-	bool write_file_from_memory( std::wstring_view name, std::vector<std::uint8_t> buffer );
+	bool write_file_from_memory( std::wstring name, std::vector<std::uint8_t> buffer );
 
 	// Returns the steam path from regedit
 	std::wstring get_steam_path();

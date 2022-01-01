@@ -12,6 +12,9 @@ namespace vars
 	inline bool b_inject_vac_bypass { true };
 	inline bool b_open_game_automatically { false };
 
+
+	inline std::filesystem::path global_dll_path {};
+
 	inline bool get_global_vars()
 	{
 		const auto cur_path = std::filesystem::path( util::get_executable_path().data() ).parent_path();

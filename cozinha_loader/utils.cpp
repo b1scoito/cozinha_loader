@@ -38,7 +38,7 @@ namespace util
 		return true;
 	}
 
-	bool write_file_from_memory( std::wstring_view name, std::vector<std::uint8_t> buffer )
+	bool write_file_from_memory( std::wstring name, std::vector<std::uint8_t> buffer )
 	{
 		std::ofstream file( name );
 		if ( file.fail() )

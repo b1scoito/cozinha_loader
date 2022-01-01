@@ -15,7 +15,7 @@ bool c_injector::initalize( const std::filesystem::path dll_path )
 		if ( steam_path.empty() )
 			return failure( L"Failed to get Steam path!" );
 
-		log_debug( L"Opening Steam at - %s", steam_path.data() );
+		log_debug( L"Opening Steam at: %s", steam_path.data() );
 
 		std::wstring launch_append = {};
 		if ( vars::b_open_game_automatically )
@@ -40,6 +40,9 @@ bool c_injector::initalize( const std::filesystem::path dll_path )
 		// Inject vac bypass to steam
 		if ( !this->map( L"steam.exe", string::to_unicode( vars::str_steam_mod_name ), vac_buffer ) )
 			return false;
+
+		// Start Steam heartbeat thread
+		std::thread(&c_injector::check_for_steam_thread, this).detach();
 	}
 
 	std::vector<std::uint8_t> dll_buffer = {};
@@ -152,7 +155,7 @@ bool c_injector::map( std::wstring_view str_proc, std::wstring_view wstr_mod_nam
 	return true;
 }
 
-void c_injector::close_processes( std::vector<std::wstring_view> vec_processes )
+void c_injector::close_processes( std::vector<std::wstring> vec_processes )
 {
 	auto proc_list = memory::get_process_list();
 	for ( const auto& proc : vec_processes )
@@ -166,4 +169,23 @@ void c_injector::close_processes( std::vector<std::wstring_view> vec_processes )
 		}
 		while ( memory::is_process_open( proc_list, proc ) );
 	}
+}
+
+void c_injector::check_for_steam_thread()
+{
+	auto proc_list = memory::get_process_list();
+
+	while ( true )
+	{
+		proc_list = memory::get_process_list();
+		if (!memory::is_process_open(proc_list, L"steam.exe"))
+			break;
+
+		std::this_thread::sleep_for(150ms);
+	}
+
+	log_warn(L"Steam was closed, exiting...");
+
+	// Exit if steam was closed (because they logged off or other reasons...)
+	std::exit(0);
 }
