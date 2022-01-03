@@ -54,25 +54,11 @@ namespace util
 
 	std::wstring get_steam_path()
 	{
-		HKEY h_key {};
-		if ( RegOpenKeyEx( HKEY_CURRENT_USER, L"Software\\Valve\\Steam", 0, KEY_QUERY_VALUE, &h_key ) != ERROR_SUCCESS )
-		{
-			RegCloseKey( h_key );
-			return {};
-		}
+		winreg::RegKey  steam_path_key { HKEY_CURRENT_USER, L"SOFTWARE\\Valve\\Steam" };
 
-		wchar_t steam_path_reg[MAX_PATH] {}; steam_path_reg[0] = '"';
-		DWORD steam_path_size = sizeof( steam_path_reg ) - sizeof( char );
+		std::wstring steam_path = steam_path_key.GetStringValue(L"SteamExe");
 
-		if ( RegQueryValueEx( h_key, L"SteamExe", nullptr, nullptr, (LPBYTE) ( steam_path_reg + 1 ), &steam_path_size ) != ERROR_SUCCESS )
-		{
-			RegCloseKey( h_key );
-			return {};
-		}
-
-		RegCloseKey( h_key );
-
-		return std::wstring( steam_path_reg ) + L"\"";
+		return std::wstring(steam_path);
 	}
 
 	std::wstring get_system_directory()

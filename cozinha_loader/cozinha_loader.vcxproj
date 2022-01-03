@@ -143,6 +143,7 @@
     <ClInclude Include="pch.hpp" />
     <ClInclude Include="utils.hpp" />
     <ClInclude Include="vars.hpp" />
+    <ClInclude Include="winreg\winreg.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

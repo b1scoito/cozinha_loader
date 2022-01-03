@@ -19,6 +19,8 @@ namespace memory
 		for ( const auto& argument : arguments )
 			params += ( L" " + argument );
 
+		log_debug(L"Opening %s", params.data());
+
 		return CreateProcess( nullptr, params.data(), nullptr, nullptr, false, 0, nullptr, nullptr, &si, &pi );
 	}
 

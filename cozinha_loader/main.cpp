@@ -5,7 +5,7 @@ INT WINAPI WinMain( _In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance, 
 	_In_ LPSTR lpCmdLine, _In_ int nShowCmd )
 {
-	std::atexit( [] { std::this_thread::sleep_for( 10s ); } );
+	std::atexit( [] { std::this_thread::sleep_for( 5s ); } );
 
 	std::int32_t argc; auto* const argv = CommandLineToArgvW( GetCommandLineW(), &argc );
 

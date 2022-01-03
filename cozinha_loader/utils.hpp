@@ -1,5 +1,7 @@
 #pragma once
 
+#include "winreg/winreg.hpp"
+
 namespace string
 {
 	// Format string

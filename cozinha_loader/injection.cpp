@@ -15,8 +15,6 @@ bool c_injector::initalize( const std::filesystem::path dll_path )
 		if ( steam_path.empty() )
 			return failure( L"Failed to get Steam path!" );
 
-		log_debug( L"Opening Steam at: %s", steam_path.data() );
-
 		std::wstring launch_append = {};
 		if ( vars::b_open_game_automatically )
 		{
@@ -26,6 +24,10 @@ bool c_injector::initalize( const std::filesystem::path dll_path )
 					launch_append = string::format( L"-applaunch %d", it.first );
 			}
 		}
+
+#ifdef _DEBUG
+		launch_append += L" -windowed -w 1280 -h 720";
+#endif
 
 		PROCESS_INFORMATION pi; // Could use the current handle instead of closing it for steam, might do it in the future...
 		if ( !memory::open_process( steam_path, { L"-console", launch_append }, pi ) )

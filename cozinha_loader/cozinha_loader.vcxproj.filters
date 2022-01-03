@@ -19,14 +19,20 @@
     <Filter Include="utils\vac3_bypass">
       <UniqueIdentifier>{1771c7ca-3cf1-4f5a-8fb0-c784c17f5d96}</UniqueIdentifier>
     </Filter>
-    <Filter Include="utils\global">
-      <UniqueIdentifier>{5b825a68-328c-4952-9229-d4e1fa3190f7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="utils\precompiled">
       <UniqueIdentifier>{ebfadaa9-2c80-4c74-b27c-c01e8ed57886}</UniqueIdentifier>
     </Filter>
-    <Filter Include="utils\inih">
+    <Filter Include="utils\ext">
+      <UniqueIdentifier>{1a8ccf9b-2b54-422c-b32c-eea68d37164d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\ext\inih">
       <UniqueIdentifier>{22f53b38-bd7c-4675-91b9-79a711dedcc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\ext\winreg">
+      <UniqueIdentifier>{ff35eb66-3e5a-45e7-9666-686be7db1ffc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils\vars">
+      <UniqueIdentifier>{5b825a68-328c-4952-9229-d4e1fa3190f7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -44,10 +50,10 @@
       <Filter>utils\memory</Filter>
     </ClCompile>
     <ClCompile Include="inih\inih.cpp">
-      <Filter>utils\inih</Filter>
+      <Filter>utils\ext\inih</Filter>
     </ClCompile>
     <ClCompile Include="inih\ini.c">
-      <Filter>utils\inih</Filter>
+      <Filter>utils\ext\inih</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -70,13 +76,16 @@
       <Filter>utils\vac3_bypass</Filter>
     </ClInclude>
     <ClInclude Include="vars.hpp">
-      <Filter>utils\global</Filter>
+      <Filter>utils\vars</Filter>
     </ClInclude>
     <ClInclude Include="inih\inih.hpp">
-      <Filter>utils\inih</Filter>
+      <Filter>utils\ext\inih</Filter>
     </ClInclude>
     <ClInclude Include="inih\ini.h">
-      <Filter>utils\inih</Filter>
+      <Filter>utils\ext\inih</Filter>
+    </ClInclude>
+    <ClInclude Include="winreg\winreg.hpp">
+      <Filter>utils\ext\winreg</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
