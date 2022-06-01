@@ -4,17 +4,16 @@
 
 namespace vars
 {
-	inline std::string str_process_name { "csgo.exe" };
-	inline std::string str_dll_name { "cheat.dll" };
-	inline std::string str_steam_mod_name { "tier0_s.dll" };
-	inline std::string str_process_mod_name { "serverbrowser.dll" };
+	inline std::string str_process_name{ "csgo.exe" };
+	inline std::string str_dll_name{ "cheat.dll" };
+	inline std::string str_steam_mod_name{ "tier0_s.dll" };
+	inline std::string str_process_mod_name{ "serverbrowser.dll" };
 
-	inline bool b_inject_vac_bypass { true };
-	inline bool b_open_game_automatically { false };
+	inline bool b_inject_vac_bypass{ true };
+	inline bool b_inject_only_vac_bypass{ false };
+	inline bool b_open_game_automatically{ false };
 
-
-	inline std::filesystem::path global_dll_path {};
-
+	inline std::filesystem::path global_dll_path{};
 
 	inline bool get_global_vars()
 	{
@@ -26,9 +25,10 @@ namespace vars
 			std::ofstream out( "cozinha_loader.ini" );
 
 			// Wow...
-			std::stringstream ss;
+			std::stringstream ss = {};
 			ss << "[launch_options]" << std::endl;
 			ss << "process_name = csgo.exe" << std::endl;
+			ss << "inject_only_vac_bypass = false" << std::endl;
 			ss << "dll_name = cheat.dll ; Remembering that a dll can still be drag'n'dropped into the loader, this is here to facilitate faster injections" << std::endl;
 			ss << "inject_vac_bypass = true" << std::endl;
 			ss << "open_game_automatically = false" << std::endl;
@@ -49,10 +49,13 @@ namespace vars
 		// launch_options
 		if ( reader.HasSection( "launch_options" ) )
 		{
-			if (reader.HasValue( "launch_options", "process_name" ) )
+			if ( reader.HasValue( "launch_options", "process_name" ) )
 				str_process_name = reader.GetString( "launch_options", "process_name", "csgo.exe" );
 
-			if (reader.HasValue( "launch_options", "dll_name" ) )
+			if ( reader.HasValue( "launch_options", "inject_only_vac_bypass" ) )
+				b_inject_only_vac_bypass = reader.GetBoolean( "launch_options", "inject_only_vac_bypass", false );
+
+			if ( reader.HasValue( "launch_options", "dll_name" ) )
 				str_dll_name = reader.GetString( "launch_options", "dll_name", "cheat.dll" );
 
 			if ( reader.HasValue( "launch_options", "inject_vac_bypass" ) )

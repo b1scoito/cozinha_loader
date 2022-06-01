@@ -1,9 +1,9 @@
 #include "pch.hpp"
 #include "injection.hpp"
 
-bool c_injector::initalize( const std::filesystem::path dll_path )
+bool c_injector::initalize()
 {
-	if ( vars::b_inject_vac_bypass )
+	if ( vars::b_inject_vac_bypass || vars::b_inject_only_vac_bypass )
 	{
 		log_debug( L"Closing processes..." );
 
@@ -16,7 +16,7 @@ bool c_injector::initalize( const std::filesystem::path dll_path )
 			return failure( L"Failed to get Steam path!" );
 
 		std::wstring launch_append = {};
-		if ( vars::b_open_game_automatically )
+		if ( vars::b_open_game_automatically && !vars::b_inject_only_vac_bypass )
 		{
 			for ( const auto& it : this->vec_app_ids )
 			{
@@ -29,7 +29,7 @@ bool c_injector::initalize( const std::filesystem::path dll_path )
 		launch_append += L" -windowed -w 1280 -h 720";
 #endif
 
-		PROCESS_INFORMATION pi; // Could use the current handle instead of closing it for steam, might do it in the future...
+		PROCESS_INFORMATION pi = {}; // Could use the current handle instead of closing it for steam, might do it in the future...
 		if ( !memory::open_process( steam_path, { L"-console", launch_append }, pi ) )
 			return failure( L"Failed to open Steam!", { pi.hProcess, pi.hThread } );
 
@@ -44,16 +44,19 @@ bool c_injector::initalize( const std::filesystem::path dll_path )
 			return false;
 
 		// Start Steam heartbeat thread
-		std::thread(&c_injector::check_for_steam_thread, this).detach();
+		std::thread( &c_injector::check_for_steam_thread, this ).detach();
 	}
 
-	std::vector<std::uint8_t> dll_buffer = {};
-	if ( !util::read_file_to_memory( std::filesystem::absolute( dll_path ), &dll_buffer ) )
-		return failure( L"Failed to write DLL to memory!" );
+	if ( !vars::b_inject_only_vac_bypass )
+	{
+		std::vector<std::uint8_t> dll_buffer = {};
+		if ( !util::read_file_to_memory( std::filesystem::absolute( vars::global_dll_path ), &dll_buffer ) )
+			return failure( L"Failed to write DLL to memory!" );
 
-	// Inject DLL to process
-	if ( !this->map( string::to_unicode( vars::str_process_name ), string::to_unicode( vars::str_process_mod_name ), dll_buffer ) )
-		return false;
+		// Inject DLL to process
+		if ( !this->map( string::to_unicode( vars::str_process_name ), string::to_unicode( vars::str_process_mod_name ), dll_buffer ) )
+			return false;
+	}
 
 	return true;
 }
@@ -114,7 +117,7 @@ bool c_injector::map( std::wstring_view str_proc, std::wstring_view wstr_mod_nam
 			std::uint8_t restore[5];
 			std::memcpy( restore, ntopenfile_ptr, sizeof( restore ) );
 
-			const auto result = bb_proc.memory().Write( (std::uintptr_t) ntopenfile_ptr, restore );
+			const auto result = bb_proc.memory().Write( (std::uintptr_t)ntopenfile_ptr, restore );
 
 			if ( !NT_SUCCESS( result ) )
 				return failure( L"Failed to write patch memory!" );
@@ -180,14 +183,14 @@ void c_injector::check_for_steam_thread()
 	while ( true )
 	{
 		proc_list = memory::get_process_list();
-		if (!memory::is_process_open(proc_list, L"steam.exe"))
+		if ( !memory::is_process_open( proc_list, L"steam.exe" ) )
 			break;
 
-		std::this_thread::sleep_for(150ms);
+		std::this_thread::sleep_for( 150ms );
 	}
 
-	log_warn(L"Steam was closed, exiting...");
+	log_warn( L"Steam was closed, exiting..." );
 
 	// Exit if steam was closed (because they logged off or other reasons...)
-	std::exit(0);
+	std::exit( 0 );
 }

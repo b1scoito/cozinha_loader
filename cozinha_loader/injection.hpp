@@ -24,10 +24,10 @@ class c_injector
 {
 private:
 	// Manual maps buffer into process
-	bool map(std::wstring_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, blackbone::eLoadFlags flags = blackbone::WipeHeader);
+	bool map( std::wstring_view str_proc, std::wstring_view wstr_mod_name, std::vector<std::uint8_t> vec_buffer, blackbone::eLoadFlags flags = blackbone::WipeHeader );
 
 	// Close an array of processes
-	void close_processes(std::vector<std::wstring> vec_processes);
+	void close_processes( std::vector<std::wstring> vec_processes );
 
 	// A heartbeat thread for the vac bypass
 	void check_for_steam_thread();
@@ -42,7 +42,7 @@ public:
 	~c_injector() = default;
 
 	// Initialize routine
-	bool initalize( const std::filesystem::path dll_path );
+	bool initalize();
 };
 
 inline auto g_injector = std::make_unique<c_injector>();
