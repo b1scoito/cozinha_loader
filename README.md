@@ -11,6 +11,10 @@ This will only, most likely, work only with [_source engine_](https://en.wikiped
 - Microsoft Visual Studio (Preferably the latest version) with C++ installed.
 - The [BlackBone Static Library](https://github.com/DarthTon/Blackbone).
 
+
+### How to compile BlackBone and include it
+Watch the video [here](https://youtu.be/1SYER_5QYHk).
+
 ### Compiling from the source
 Open the solution file `cozinha_loader.sln`, add the BlackBone library path to the VC++ include directory, then select `Release | x86` on the Build configuration and press Build solution.
 
